@@ -1,7 +1,7 @@
 galaxy_info:
   author: christianb93
   description: |
-    This role prepares all required credentials for the installation. It will create a file credentials.yaml in the playbook directory on the Ansible host if that does not yet exist and
+    This role prepares all required credentials for the installation. It will create a file credentials.yaml on the Ansible host if that does not yet exist and
     use pwgen to create comparatively secure passwords. It will also make sure that an SSH key pair is in place.
   license: MIT
   min_ansible_version: 2.4

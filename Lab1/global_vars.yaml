@@ -1,3 +1,6 @@
+---
+# The directory in which we keep credentials
+credentials_dir: "~/.os_credentials"
 # The management network that we use
 management_network_cidr: "192.168.1.0/24"
 # The user we will use throughout the installation process on the nodes

@@ -19,6 +19,7 @@ Role Variables
 
 The following variables need to be set when invoking this role:
 
+credentials_dir - the directory in which the credentials are created
 install_user - the user which we will use to run those parts of the installation process which do not require elevated privileges - default vagrant
 install_user_home - the home directory of this user on each node
 ssh_key_name - the name of the SSH key to distribute

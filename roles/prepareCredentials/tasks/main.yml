@@ -2,9 +2,13 @@
 # First we create the credentials. If there is already a file with the
 # credentials in place, we leave it alone as the credentials therein
 # are most likely already in use
+- name: Make sure that credentials directory exists
+  file:
+    path: "{{credentials_dir}}"
+    state: directory
 - name: Check if credentials.yaml exists
   stat:
-    path: "{{playbook_dir}}/credentials.yaml"
+    path: "{{credentials_dir}}/credentials.yaml"
   register: credentials_yaml
 - name: Create secure MariaDB password
   shell:
@@ -28,7 +32,7 @@
   when: credentials_yaml.stat.exists == False
 - name: Create credentials
   template:
-    dest: "{{playbook_dir}}/credentials.yaml"
+    dest: "{{credentials_dir}}/credentials.yaml"
     force: no
     src: "credentials.yaml.j2"
   when: credentials_yaml.stat.exists == False
@@ -37,7 +41,7 @@
 # playbook directory
 - name: Create key pair locally
   openssh_keypair:
-    path: "{{playbook_dir}}/{{ssh_key_name}}"
+    path: "{{credentials_dir}}/{{ssh_key_name}}"
     size: 2048
     type: rsa
     state: present

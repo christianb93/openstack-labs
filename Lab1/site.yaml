@@ -17,10 +17,12 @@
 - name: Import credentials
   hosts: all
   gather_facts: no
+  vars_files:
+    global_vars.yaml
   tasks:
     - name: Read credentials
       include_vars:
-        file: "{{playbook_dir}}/credentials.yaml"
+        file: "{{credentials_dir}}/credentials.yaml"
 
 # Make sure that all hosts are up before proceeding
 - name: Check connectivity

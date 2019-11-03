@@ -6,25 +6,29 @@
 - name: Create admin-openrc
   template:
     dest: "{{install_user_home}}/admin-openrc"
+    owner: "{{install_user}}"
+    group: "{{install_user}}"
     force: yes
     mode: 0700
     src: "admin_openrc.j2"
 - name: Create demo-openrc
   template:
     dest: "{{install_user_home}}/demo-openrc"
+    owner: "{{install_user}}"
+    group: "{{install_user}}"
     force: yes
     mode: 0700
     src: "demo_openrc.j2"
 - name: Distribute private key
   copy:
-    src: "{{playbook_dir}}/demo-key"
+    src: "{{credentials_dir}}/demo-key"
     dest: "{{install_user_home}}/demo-key"
     owner: "{{install_user}}"
     group: "{{install_user}}"
     mode: 0700
 - name: Distribute public key
   copy:
-    src: "{{playbook_dir}}/demo-key.pub"
+    src: "{{credentials_dir}}/demo-key.pub"
     dest: "{{install_user_home}}/demo-key.pub"
     owner: "{{install_user}}"
     group: "{{install_user}}"
