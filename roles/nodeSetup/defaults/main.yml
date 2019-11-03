@@ -1,3 +1,7 @@
 ---
 # OpenStack release - currently this has only been tested with stein
 openstack_release: stein
+# Whether to use a proxy for APT
+use_apt_proxy: False
+# URL of the proxy  - only relevant if the above option is set to True
+apt_proxy_url:

@@ -54,6 +54,15 @@
 #
 # Enable APT repositories and install python openstack client
 #
+- name: Create configuration for ATP proxy
+  shell:
+    echo "Acquire::http { Proxy \"{{apt_proxy_url}}\"; };" > /etc/apt/apt.conf.d/71proxy
+  when: use_apt_proxy == True
+- name: Turn off APT proxy when needed
+  file:
+    path: /etc/apt/apt.conf.d/71proxy
+    state: absent
+  when: use_apt_proxy == False
 - name: Install ubuntu cloud keyring
   apt:
     name: ubuntu-cloud-keyring

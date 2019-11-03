@@ -43,7 +43,8 @@
   hosts: all
   become: yes
   vars_files:
-    global_vars.yaml
+    - global_vars.yaml
+    - "{{playbook_dir}}/../conf/apt_proxy.yaml"
   roles:
     - nodeSetup
 
