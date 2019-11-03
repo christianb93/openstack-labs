@@ -1,0 +1,69 @@
+---
+- name: Create keystone database
+  mysql_db:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: keystone
+    state: present
+- name: Create keystone user with necessary grants
+  mysql_user:
+    name: keystone
+    password: "{{keystone_db_user_password}}"
+    priv: 'keystone.*:ALL'
+    state: present
+    host: "{{item}}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  loop:
+    - localhost
+    - "%"
+- name: Install keystone packages
+  apt:
+    force_apt_get: yes
+    state: latest
+    name: keystone
+- name: Create Keystone configuration file
+  template:
+    dest: /etc/keystone/keystone.conf
+    src: keystone.conf.j2
+    owner: keystone
+    group: keystone
+    force: yes
+    mode: 0644
+- name: Sync keystone database
+  become: yes
+  become_user: keystone
+  shell:
+    keystone-manage db_sync
+- name: Setup Keystone credentials and Fernet
+  shell: |
+    keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+    keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+- name: Bootstrap Keystone service
+  shell: |
+    keystone-manage bootstrap --bootstrap-password {{OS_ADMIN_PASSWORD}} \
+    --bootstrap-admin-url http://controller:5000/v3/ \
+    --bootstrap-internal-url http://controller:5000/v3/ \
+    --bootstrap-public-url http://controller:5000/v3/ \
+    --bootstrap-region-id RegionOne
+- name: Set Apache Server name
+  lineinfile:
+    path: /etc/apache2/apache2.conf
+    line: "ServerName {{inventory_hostname}}"
+    state: present
+- name: Restart apache
+  service:
+    name: apache2
+    state: restarted
+- name: Create service project in Keystone
+  os_project:
+    auth:
+      auth_url: http://controller:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{OS_ADMIN_PASSWORD}}"
+    auth_type: password
+    description: "Service Project"
+    name: "service"
+    domain: "default"
+    state: present
