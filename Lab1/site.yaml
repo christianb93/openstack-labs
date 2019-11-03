@@ -3,26 +3,71 @@
 #
 - name: Create credentials
   hosts: localhost
-  roles:
-    - prepareCredentials
-
-#
-# Include file credentials.yaml so that we have these variables
-# set throughout the entire playbook
-#
-- name: Source credentials
-  hosts: all
-  tasks:
-    - name: Read credentials from file
-      include_vars:
-        file: "{{playbook_dir}}/credentials.yaml"
-
-#
-# Distribute credentials to all nodes
-#
-- name: Distribute credentials
-  hosts: all
   vars_files:
     - global_vars.yaml
   roles:
-    - distributeCredentials
+    - prepareCredentials
+
+
+#
+# Now import the credentials just created. We cannot
+# include this in vars_files as the file is not yet
+# present when we run the playbook.
+#
+- name: Import credentials
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Read credentials
+      include_vars:
+        file: "{{playbook_dir}}/credentials.yaml"
+
+# Make sure that all hosts are up before proceeding
+- name: Check connectivity
+  hosts: all
+  tasks:
+    - name: Check connectivity
+      ping:
+
+
+#
+# Perform basic setup steps on all nodes. This will
+# - distribute credentials
+# - set up networking
+# - register the Cloud APT repository
+# - install the python3 openstack client
+#
+- name: Basic node setup
+  hosts: all
+  become: yes
+  vars_files:
+    global_vars.yaml
+  roles:
+    - nodeSetup
+
+
+#
+# Set up the controller node as NTP server
+#
+- name: Install NTP on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    ntp_network_cidr: "{{management_network_cidr}}"
+  roles:
+    - ntpServer
+
+#
+# Set up the compute nodes as NTP clients
+#
+- name: Install NTP client on compute nodes
+  hosts: compute_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    ntp_server_name: controller
+  roles:
+    - ntpClient

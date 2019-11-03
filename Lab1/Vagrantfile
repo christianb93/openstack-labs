@@ -16,7 +16,10 @@ Vagrant.configure("2") do |config|
     controller.vm.hostname = "controller"
     controller.vm.box = "ubuntu/bionic64"
     controller.vm.network "private_network", ip: "192.168.1.11", virtualbox__intnet: "managementNetwork"
-    controller.vm.network "private_network", ip: "172.0.0.1",  auto_config: false, name: 'vboxnet0'
+    # This configuration will NOT assign the IP addres 172.16.0.2 to the machine, as the auto_config flag
+    # is set to false, but will make  VirtualBox create the interface vboxnet0 on the host and will
+    # assign the IP address 172.16.0.1/24 to it.
+    controller.vm.network "private_network", ip: "172.16.0.2",  auto_config: false
     controller.vm.network "forwarded_port", guest: 22, host: 8222
     controller.vm.provider "virtualbox" do |v|
       v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
@@ -26,7 +29,33 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  config.vm.define "compute1" do |compute1|
+    compute1.vm.hostname = "compute1"
+    compute1.vm.box = "ubuntu/bionic64"
+    compute1.vm.network "private_network", ip: "192.168.1.21", virtualbox__intnet: "managementNetwork"
+    compute1.vm.network "private_network", ip: "172.16.0.3",  auto_config: false, name: 'vboxnet0'
+    compute1.vm.network "forwarded_port", guest: 22, host: 8200
+    compute1.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+      v.memory = 4096
+      v.cpus = 2
+    end
+  end
 
+  config.vm.define "compute2" do |compute2|
+    compute2.vm.hostname = "compute2"
+    compute2.vm.box = "ubuntu/bionic64"
+    compute2.vm.network "private_network", ip: "192.168.1.22", virtualbox__intnet: "managementNetwork"
+    compute2.vm.network "private_network", ip: "172.16.0.3",  auto_config: false, name: 'vboxnet0'
+    compute2.vm.network "forwarded_port", guest: 22, host: 8201
+    compute2.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+      v.memory = 4096
+      v.cpus = 2
+    end
+  end
 
 
 end

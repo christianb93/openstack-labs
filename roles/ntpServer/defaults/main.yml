@@ -1,0 +1,3 @@
+---
+# The network on which the server will listen
+ntp_network_cidr: "0.0.0.0/0"

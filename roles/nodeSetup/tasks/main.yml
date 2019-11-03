@@ -29,3 +29,40 @@
     owner: "{{install_user}}"
     group: "{{install_user}}"
     mode: 0700
+#
+# Bring up all devices and set up name resolution
+#
+- name: Bring up VM network device
+  shell:
+    ip link set {{vm_network_device}} up
+
+- name: Ensure entries for all nodes exist in /etc/hosts
+  lineinfile:
+    line: "{{ item[1].mgmt_ip}} {{ item[0] }}"
+    state: present
+    path: /etc/hosts
+  loop:
+    "{{ hostvars.items() | list }}"
+  loop_control:
+    label: "{{ item[0] }}"
+
+
+#
+# Enable APT repositories and install python openstack client
+#
+- name: Install ubuntu cloud keyring
+  apt:
+    name: ubuntu-cloud-keyring
+    force_apt_get: yes
+    update_cache: yes
+    state: latest
+- name: Add repository
+  apt_repository:
+    repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu bionic-updates/{{openstack_release}} main"
+    state: present
+    update_cache: yes
+- name: Install python client for OpenStack
+  apt:
+    name: python3-openstackclient
+    force_apt_get: yes
+    state: latest

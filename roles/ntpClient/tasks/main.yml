@@ -1,0 +1,26 @@
+---
+- name: Install chrony
+  apt:
+    force_apt_get: yes
+    update_cache: yes
+    name: chrony
+    state: latest
+- name: Remove all pool entries from log file
+  lineinfile:
+    regexp: "^pool"
+    state: absent
+    path: /etc/chrony/chrony.conf
+  register:
+    chrony_pool
+- name: Add server entry to chrony configuration file
+  lineinfile:
+    line: "server {{ntp_server_name}} iburst"
+    state: present
+    path: /etc/chrony/chrony.conf
+  register:
+    chrony_server
+- name: Restart chrony if needed
+  service:
+    name: chrony
+    state: restarted
+  when: chrony_pool.changed == True or chrony_server.changed == True

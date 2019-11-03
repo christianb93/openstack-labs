@@ -1,7 +1,0 @@
----
-# The user we will use throughout the installation process on the nodes
-install_user: vagrant
-# The home directory of the install user
-install_user_home: "/home/vagrant"
-# The name of the SSH key to distribute
-ssh_key_name: demo-key

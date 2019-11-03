@@ -14,6 +14,8 @@ Make sure that the pwgen utility is installed on the Ansible host.
 Role Variables
 --------------
 
+The following variables are assumed to be set when calling this role:
+
 ssh_key_name - this is the name which is used for the SSH key pair
 
 Dependencies

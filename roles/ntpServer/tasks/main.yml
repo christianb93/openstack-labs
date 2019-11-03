@@ -1,0 +1,19 @@
+---
+- name: Install chrony
+  apt:
+    force_apt_get: yes
+    update_cache: yes
+    name: chrony
+    state: latest
+- name: Allow access from network
+  lineinfile:
+    line: "allow {{ntp_network_cidr}}"
+    state: present
+    path: "/etc/chrony/chrony.conf"
+  register:
+    chrony_conf
+- name: Restart NTP server if needed
+  service:
+    name: chrony
+    state: restarted
+  when: chrony_conf.changed == True
