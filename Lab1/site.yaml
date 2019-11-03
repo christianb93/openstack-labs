@@ -1,0 +1,7 @@
+#
+# Create credentials
+#
+- name: Create credentials
+  hosts: localhost
+  roles:
+    - credentials
