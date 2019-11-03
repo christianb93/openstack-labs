@@ -1,4 +1,4 @@
-Role Name
+ntpServer
 =========
 
 Install an NTP server

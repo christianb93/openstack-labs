@@ -1,7 +1,7 @@
-ntpClient
+rabbitMQ
 =========
 
-Install an NTP client
+This role installs RabbitMQ and creates a user with full privileges
 
 Requirements
 ------------
@@ -13,12 +13,14 @@ Role Variables
 
 The following variable needs to be set when calling this role.
 
-ntp_server_name: the name of the NTP server - needs to be a name which can be resolved.
+rabbitmq_user_name - name of the user that we create
+rabbit_user_password - password of that user
 
 Dependencies
 ------------
 
 None
+
 
 License
 -------
@@ -28,4 +30,4 @@ MIT
 Author Information
 ------------------
 
-Visit me on https://www.github.com/christianb93
+Visit me at https://www.github.com/christianb93

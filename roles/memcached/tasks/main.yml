@@ -1,0 +1,21 @@
+---
+- name: Install Memcached
+  apt:
+    force_apt_get: yes
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - memcached
+    - python-memcache
+- name: Make Memcached listen on the correct IP address
+  template:
+    src: memcached.conf.j2
+    force: yes
+    dest: /etc/memcached.conf
+  register:
+    memcached_conf
+- name: Restart memcached if needed
+  service:
+    name: memcached
+    state: restarted
+  when: memcached_conf.changed == True

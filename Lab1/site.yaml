@@ -71,3 +71,21 @@
     ntp_server_name: controller
   roles:
     - ntpClient
+
+
+#
+# Install MariaDB, Memcached and RabbitMQ on the controller
+#
+- name: Install middleware on controller node
+  hosts: controller_nodes
+  become: yes
+  vars:
+    mariadb_server_ip: "{{hostvars.controller.mgmt_ip}}"
+    mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
+    rabbit_user_name: "openstack"
+    rabbit_user_password: "{{OS_SERVICE_PASSWORD}}"
+    memcached_server_ip: "{{hostvars.controller.mgmt_ip}}"
+  roles:
+    - mariaDB
+    - rabbitMQ
+    - memcached

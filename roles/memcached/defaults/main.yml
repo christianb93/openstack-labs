@@ -1,0 +1,3 @@
+---
+# IP address on which the server will be listening
+memcached_server_ip: 0.0.0.0/0

@@ -1,4 +1,4 @@
-Role Name
+prepareCredentials 
 =========
 
 This role prepares all required credentials for the installation. It will create a file credentials.yaml in the playbook directory on the Ansible host if that does not yet exist and

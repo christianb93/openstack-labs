@@ -1,4 +1,4 @@
-Role Name
+nodeSetup
 =========
 
 This role prepares all nodes for the installation. It will

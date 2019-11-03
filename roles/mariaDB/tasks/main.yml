@@ -1,0 +1,29 @@
+---
+- name: Install MariaDB
+  apt:
+    force_apt_get: yes
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - mariadb-server
+    - python-pymysql
+    - python3-pymysql
+- name: Install configuration file
+  template:
+    dest: /etc/mysql/mariadb.conf.d/99-openstack.cnf
+    force: yes
+    mode: 0744
+    src: 99-openstack.cnf.j2
+  register:
+    maria_db
+- name: Restart MariaDB if needed
+  service:
+    name: mysql
+    state: restarted
+  when: maria_db.changed == True
+- name: Set MariaDB root password
+  mysql_user:
+    name: root
+    password: "{{mariadb_root_password}}"
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
