@@ -4,4 +4,25 @@
 - name: Create credentials
   hosts: localhost
   roles:
-    - credentials
+    - prepareCredentials
+
+#
+# Include file credentials.yaml so that we have these variables
+# set throughout the entire playbook
+#
+- name: Source credentials
+  hosts: all
+  tasks:
+    - name: Read credentials from file
+      include_vars:
+        file: "{{playbook_dir}}/credentials.yaml"
+
+#
+# Distribute credentials to all nodes
+#
+- name: Distribute credentials
+  hosts: all
+  vars_files:
+    - global_vars.yaml
+  roles:
+    - distributeCredentials
