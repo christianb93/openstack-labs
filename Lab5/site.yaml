@@ -221,3 +221,19 @@
     ovs_bridge_mappings: "physnet:br-phys"
   roles:
     - neutron_server
+
+- name: Finalize Neutron configuration on compute nodes
+  hosts: compute_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    type_drivers: "local, flat"
+    tenant_network_types: ""
+    flat_networks: "physnet"
+    ovs_bridge_mappings: "physnet:br-phys"
+  roles:
+    - neutron_compute

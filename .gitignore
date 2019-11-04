@@ -8,3 +8,9 @@ __pycache__/
 
 # Credentials
 credentials.yaml
+
+# Disk images
+*.img
+
+# Log files
+*.log

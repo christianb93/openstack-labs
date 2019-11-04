@@ -1,0 +1,16 @@
+---
+- name: Create neutron configuration file for compute node
+  template:
+    src: "neutron.conf.j2"
+    dest: /etc/neutron/neutron.conf
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+- name: Restart services
+  service:
+    state: restarted
+    name: "{{item}}"
+  loop:
+    - nova-compute
+    - neutron-openvswitch-agent  

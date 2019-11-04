@@ -1,0 +1,7 @@
+galaxy_info:
+  author: christianb93
+  description: Install Neutron on a compute node
+  license: MIT
+  min_ansible_version: 2.4
+  galaxy_tags: []
+dependencies: ["ovs_agent"]
