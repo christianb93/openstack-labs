@@ -54,7 +54,7 @@
 #
 # Enable APT repositories and install python openstack client
 #
-- name: Create configuration for ATP proxy
+- name: Create configuration for APT proxy
   shell:
     echo "Acquire::http { Proxy \"{{apt_proxy_url}}\"; };" > /etc/apt/apt.conf.d/71proxy
   when: use_apt_proxy == True
@@ -79,3 +79,8 @@
     name: python3-openstackclient
     force_apt_get: yes
     state: latest
+- name: Make sure that ifupdown is installed as a workaround for https://github.com/hashicorp/vagrant/issues/9134
+  apt:
+    name: ifupdown
+    force_apt_get: yes
+    state: present
