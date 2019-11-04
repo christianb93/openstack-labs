@@ -1,0 +1,26 @@
+- name: Install nova package
+  apt:
+    force_apt_get: yes
+    update_cache: yes
+    name: nova-compute
+    state: latest
+- name: Create nova configuration file
+  template:
+    src: "nova.conf.j2"
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    force: yes
+    mode: 0644
+- name: Create nova compute configuration file
+  template:
+    src: "nova-compute.conf.j2"
+    dest: /etc/nova/nova-compute.conf
+    owner: root
+    group: nova
+    force: yes
+    mode: 0644
+- name: Restart compute service
+  service:
+    name: nova-compute
+    state: restarted

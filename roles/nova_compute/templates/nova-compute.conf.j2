@@ -1,0 +1,8 @@
+[DEFAULT]
+compute_driver=libvirt.LibvirtDriver
+[libvirt]
+# <!--- CHANGED
+# This setting assumes that we cannot use kvm  - change this to kvm
+# if your compute nodes support hardware accelaration (vmx / svm in /proc/cpuinfo)
+virt_type={{virt_type}}
+# CHANGED --->

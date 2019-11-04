@@ -168,3 +168,28 @@
     metadata_shared_secret: "{{OS_SHARED_SECRET}}"
   roles:
     - nova
+
+
+#
+# Install Nova on the compute nodes
+#
+- name: Install Nova on compute nodes
+  hosts: compute_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_server_name: controller
+    memcached_server_name: controller
+    rabbitmq_server_name: controller
+    glance_server_name: controller
+    neutron_server_name: controller
+    neutron_keystone_password: "{{OS_SERVICE_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    nova_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_server_name: controller
+  roles:
+    - nova_compute

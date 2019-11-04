@@ -1,0 +1,5 @@
+---
+# Virtualization type to be used. Either kvm or quemu.
+# This setting assumes that we cannot use kvm  - change this to kvm
+# if your compute nodes support hardware accelaration (vmx / svm in /proc/cpuinfo)
+virt_type: qemu
