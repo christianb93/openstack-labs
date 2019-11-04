@@ -105,3 +105,40 @@
     keystone_db_user_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - keystone
+
+
+#
+# Install Glance on the controller node
+#
+- name: Install Glance on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_server_name: controller
+    mysql_server_name: controller
+    memcached_server_name: controller
+    glance_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    glance_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - glance
+
+#
+# Install Placement on the controller node
+#
+- name: Install Placement on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_server_name: controller
+    memcached_server_name: controller
+    mysql_server_name: controller
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    placement_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - placement

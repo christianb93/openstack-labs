@@ -1,0 +1,128 @@
+---
+- name: Create glance database
+  mysql_db:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: glance
+    state: present
+- name: Create glance user with necessary grants
+  mysql_user:
+    name: glance
+    password: "{{glance_db_user_password}}"
+    priv: 'glance.*:ALL'
+    state: present
+    host: "{{item}}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  loop:
+    - localhost
+    - "%"
+- name: Create glance user in keystone
+  os_user:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    description: "Glance user"
+    name: "glance"
+    domain: "default"
+    password: "{{glance_keystone_user_password}}"
+    state: present
+- name: Assign admin role to newly created glance user
+  os_user_role:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    project: service
+    user: glance
+    role: admin
+    state: present
+- name: Create glance service entity
+  os_keystone_service:
+    auth:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    name: glance
+    service_type: image
+    state: present
+- name: Create endpoints
+  os_keystone_endpoint:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    endpoint_interface: "{{item}}"
+    service: glance
+    region: RegionOne
+    url: "http://{{inventory_hostname}}:9292"
+    state: present
+  loop:
+    - public
+    - internal
+    - admin
+- name: Install glance package
+  apt:
+    force_apt_get: yes
+    name: glance
+    state: latest
+- name: Create glance-api.conf
+  template:
+    src: "glance-api.conf.j2"
+    dest: /etc/glance/glance-api.conf
+    owner: root
+    group: glance
+    force: yes
+    mode: 0644
+- name: Create glance-registry.conf
+  template:
+    src: "glance-registry.conf.j2"
+    dest: /etc/glance/glance-registry.conf
+    owner: root
+    group: glance
+    force: yes
+    mode: 0644
+- name: Sync glance database
+  become_user: glance
+  shell:
+    glance-manage db_sync
+- name: Restart glance
+  service:
+    name: glance-api
+    state: restarted
+- name: Download CirrOS image
+  get_url:
+    dest: "{{install_user_home}}/cirros-0.4.0-x86_64-disk.img"
+    force: no
+    url: "{{cirros_download_url}}/cirros-0.4.0-x86_64-disk.img"
+- name: Upload image into glance
+  os_image:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    filename: "{{install_user_home}}/cirros-0.4.0-x86_64-disk.img"
+    interface: public
+    name: cirros
+    is_public: yes
+    state: present

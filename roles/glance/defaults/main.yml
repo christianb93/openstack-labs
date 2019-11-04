@@ -1,0 +1,4 @@
+---
+# The URL to download the CirrOS image from
+# cirros_download_url: "http://download.cirros-cloud.net/0.4.0/"
+cirros_download_url: "http://download.cirros-cloud.net/0.4.0/"  
