@@ -1,0 +1,135 @@
+---
+- name: Create neutron database
+  mysql_db:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: neutron
+    state: present
+- name: Create neutron user with necessary grants
+  mysql_user:
+    name: neutron
+    password: "{{neutron_db_user_password}}"
+    priv: 'neutron.*:ALL'
+    state: present
+    host: "{{item}}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  loop:
+    - localhost
+    - "%"
+- name: Create neutron user in keystone
+  os_user:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    description: "Neutron user"
+    name: "neutron"
+    domain: "default"
+    password: "{{neutron_keystone_user_password}}"
+    state: present
+- name: Assign admin role to newly created neutron user
+  os_user_role:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    project: service
+    user: neutron
+    role: admin
+    state: present
+- name: Create neutron service entity
+  os_keystone_service:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    name: neutron
+    service_type: network
+    state: present
+- name: Create endpoints
+  os_keystone_endpoint:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    endpoint_interface: "{{item}}"
+    service: neutron
+    region: RegionOne
+    url: "http://{{inventory_hostname}}:9696"
+    state: present
+  loop:
+    - public
+    - internal
+    - admin
+- name: Install neutron packages
+  apt:
+    force_apt_get: yes
+    name: "{{item}}"
+    state: latest
+  loop:
+    - neutron-server
+    - neutron-plugin-ml2
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+- name: Create configuration file neutron.conf
+  template:
+    dest: /etc/neutron/neutron.conf
+    src: neutron.conf.j2
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+- name: Create ML2 plugin configuration file
+  template:
+    src: ml2_conf.ini.j2
+    dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+- name: Create DHCP agent configuration file
+  template:
+    src: dhcp_agent.ini.j2
+    dest: /etc/neutron/dhcp_agent.ini
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+- name: Create metadata agent configuration file
+  template:
+    src: "metadata_agent.ini.j2"
+    dest: /etc/neutron/metadata_agent.ini
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+- name: Sync neutron database
+  become: yes
+  become_user: neutron
+  shell:
+    neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+- name: Restart services
+  service:
+    state: restarted
+    name: "{{item}}"
+  loop:
+    - nova-api
+    - neutron-server
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+    - neutron-openvswitch-agent

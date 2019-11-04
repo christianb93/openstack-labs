@@ -1,0 +1,14 @@
+---
+- name: Install OVS agent
+  apt:
+    force_apt_get: yes
+    name: neutron-openvswitch-agent
+    state: latest
+- name: Create OVS agent configuration file
+  template:
+    src: openvswitch_agent.ini.j2
+    dest: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644

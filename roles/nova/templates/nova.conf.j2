@@ -7717,7 +7717,7 @@ user_domain_name = default
 region_name = RegionOne
 project_name = service
 username = neutron
-password = {{neutron_keystone_password}}
+password = {{neutron_keystone_user_password}}
 service_metadata_proxy = true
 metadata_proxy_shared_secret = {{metadata_shared_secret}}
 # CHANGED --->
@@ -10567,9 +10567,7 @@ password = {{placement_keystone_user_password}}
 # (for example Horizon) can then establish a VNC connection to the guest.
 #  (boolean value)
 # Deprecated group/name - [DEFAULT]/vnc_enabled
-# <!--- CHANGED
-enabled = true
-# CHANGED --->
+# enabled = true
 
 # DEPRECATED:
 # Keymap for VNC.
@@ -10602,9 +10600,7 @@ enabled = true
 #  (host address value)
 # Deprecated group/name - [DEFAULT]/vncserver_listen
 # Deprecated group/name - [vnc]/vncserver_listen
-# <!--- CHANGED
-server_listen = $my_ip
-# CHANGED --->
+# server_listen = 0.0.0.0
 
 #
 # Private, internal IP address or hostname of VNC console proxy.
@@ -10617,9 +10613,8 @@ server_listen = $my_ip
 #  (host address value)
 # Deprecated group/name - [DEFAULT]/vncserver_proxyclient_address
 # Deprecated group/name - [vnc]/vncserver_proxyclient_address
-# <!--- CHANGED
-server_proxyclient_address = $my_ip
-# CHANGED --->
+# server_proxyclient_address = 0.0.0.0
+
 
 #
 # Public address of noVNC VNC console proxy.

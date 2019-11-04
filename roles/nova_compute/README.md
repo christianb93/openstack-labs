@@ -40,7 +40,7 @@ memcached_server_name - the name of the node on which memcached is running
 rabbitmq_server_name - the name on which the RabbitMQ service is running
 glance_server_name - the name of the node on which Glance is running
 neutron_server_name - the name on which the Neutron server will be running
-neutron_keystone_password - the password of the neutron Keystone user
+neutron_keystone_user_password - the password of the neutron Keystone user
 rabbitmq_password - the password to use for the openstack user in RabbitMQ
 keystone_admin_password - the password of the admin user in keystone
 nova_db_user_password - password that we will use for the nova DB user

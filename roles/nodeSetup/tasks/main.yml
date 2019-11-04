@@ -74,11 +74,14 @@
     repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu bionic-updates/{{openstack_release}} main"
     state: present
     update_cache: yes
-- name: Install python client for OpenStack
+- name: Install python client for OpenStack and OVS
   apt:
-    name: python3-openstackclient
+    name:  "{{item}}"
     force_apt_get: yes
     state: latest
+  loop:
+    - python3-openstackclient
+    - openvswitch-switch
 - name: Make sure that ifupdown is installed as a workaround for https://github.com/hashicorp/vagrant/issues/9134
   apt:
     name: ifupdown
