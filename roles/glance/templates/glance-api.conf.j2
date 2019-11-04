@@ -3333,11 +3333,7 @@ connection = mysql+pymysql://glance:{{glance_db_user_password}}@{{mysql_server_n
 
 
 [glance_store]
-# <!--- CHANGED
-stores = file,http
-default_store = file
-filesystem_store_datadir = /var/lib/glance/images/
-# CHANGED --->
+
 #
 # From glance.multi_store
 #
