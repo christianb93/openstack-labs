@@ -1,0 +1,137 @@
+- name: Create nova databases
+  mysql_db:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: "{{item}}"
+    state: present
+  loop:
+    - nova_api
+    - nova
+    - nova_cell0
+- name: Create nova user with necessary grants
+  mysql_user:
+    name: nova
+    password: "{{nova_db_user_password}}"
+    priv: 'nova.*:ALL/nova_api.*:ALL/nova_cell0.*:ALL'
+    state: present
+    host: "{{item}}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  loop:
+    - localhost
+    - "%"
+- name: Create nova user in keystone
+  os_user:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    description: "Nova user"
+    name: "nova"
+    domain: "default"
+    password: "{{nova_keystone_user_password}}"
+    state: present
+- name: Assign admin role to newly created nova user
+  os_user_role:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    project: service
+    user: nova
+    role: admin
+    state: present
+- name: Create nova service entity
+  os_keystone_service:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    name: nova
+    service_type: compute
+    state: present
+- name: Create endpoints
+  os_keystone_endpoint:
+    auth:
+      auth_url: http://{{keystone_server_name}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    endpoint_interface: "{{item}}"
+    service: nova
+    region: RegionOne
+    url: "http://{{inventory_hostname}}:8774/v2.1"
+    state: present
+  loop:
+    - public
+    - internal
+    - admin
+- name: Install nova packages
+  apt:
+    force_apt_get: yes
+    name: "{{item}}"
+    state: latest
+  loop:
+    - nova-api
+    - nova-conductor
+    - nova-novncproxy
+    - nova-scheduler
+- name: Create nova configuration file
+  template:
+    src: "nova.conf.j2"
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    force: yes
+    mode: 0644
+
+
+- name: Create nova API database scheme
+  become: yes
+  become_user: nova
+  shell:
+     nova-manage api_db sync
+- name: Register cell0 database
+  become: yes
+  become_user: nova
+  shell:
+    nova-manage cell_v2 map_cell0
+- name: Check whether cell1 already exists
+  shell:
+    nova-manage cell_v2 list_cells | grep "cell1" | wc -l
+  register:
+    cell1_state
+- name: Create cell1 if needed
+  become: yes
+  become_user: nova
+  shell:
+    nova-manage cell_v2 create_cell --name=cell1
+  when:
+    cell1_state.stdout != "1"
+- name: Create nova database scheme
+  become: yes
+  become_user: nova
+  shell:
+     nova-manage db sync
+- name: Restart nova services
+  service:
+    name: "{{item}}"
+    state: restarted
+  loop:
+    - nova-api
+    - nova-scheduler
+    - nova-conductor
+    - nova-novncproxy
