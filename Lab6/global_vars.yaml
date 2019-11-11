@@ -1,0 +1,28 @@
+---
+# The directory in which we keep credentials
+credentials_dir: "~/.os_credentials"
+# The management network that we use
+management_network_cidr: "192.168.1.0/24"
+# The user we will use throughout the installation process on the nodes
+install_user: vagrant
+# The home directory of the install user
+install_user_home: "/home/vagrant"
+# Name of the unnamed device (i.e. with no IP address assigned) that we will
+# use for the VM network
+vm_network_device: enp0s9
+# The name of the SSH key that we will create and use for the virtual
+# machines spawned by OpenStack
+ssh_key_name: demo-key
+# The names of the nodes on which the various components are running
+keystone_server_name: controller
+mysql_server_name: controller
+memcached_server_name: controller
+rabbitmq_server_name: controller
+glance_server_name: controller
+neutron_server_name: controller
+nova_server_name: controller
+# The name of the OVS bridge that we will create and to which Neutron will attach
+# to connect to the physical network interfaces
+phys_bridge_name: br-phys
+# The interface which we attach to this bridge to provide connectivity
+phys_interface: enp0s9

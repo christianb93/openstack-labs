@@ -46,7 +46,7 @@ keystone_admin_password - the password of the admin user in keystone
 nova_db_user_password - password that we will use for the nova DB user
 nova_keystone_user_password - the password that we will set for the nova user in Keystone
 placement_keystone_user_password - the password of the placement Keystone user
-nova_server_name - the name of the node on which the Nova server is running
+
 
 For the following variable, we define a default within this role.
 

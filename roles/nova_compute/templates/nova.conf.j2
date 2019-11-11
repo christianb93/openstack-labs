@@ -10639,7 +10639,11 @@ server_proxyclient_address = $my_ip
 # * novncproxy_port
 #  (uri value)
 # <!--- CHANGED
-novncproxy_base_url = http://{{nova_server_name}}:6080/vnc_auto.html
+# This is the IP address that Horizon will use to connect to the VNC console. For this 
+# to work, this must be an address which is reachable under this IP for the browser
+# in which we visit the Horizon dashboard. In our setup, this works as the controller
+# is reachable via the vboxnet interface from the lab host
+novncproxy_base_url = http://{{hostvars.controller.mgmt_ip}}:6080/vnc_auto.html
 # CHANGED --->
 
 # DEPRECATED:

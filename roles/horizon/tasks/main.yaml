@@ -1,0 +1,18 @@
+---
+- name: Install Horizon package
+  apt:
+    name: openstack-dashboard 
+    force_apt_get: yes
+    state: latest
+- name: Create local_settings.py
+  template:
+    dest: /etc/openstack-dashboard/local_settings.py.new
+    mode: 0640
+    owner: root
+    group: horizon
+    force: yes
+    src: local_settings.py.j2
+- name: Restart apache2 
+  service:
+    name: apache2
+    state: restarted    
