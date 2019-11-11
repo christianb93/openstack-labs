@@ -6,7 +6,7 @@
     state: latest
 - name: Create local_settings.py
   template:
-    dest: /etc/openstack-dashboard/local_settings.py.new
+    dest: /etc/openstack-dashboard/local_settings.py
     mode: 0640
     owner: root
     group: horizon
