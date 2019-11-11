@@ -99,4 +99,7 @@
       shell: |
         cd /home/stack/openstack-labs/{{lab}}
         ansible-playbook -i hosts.ini site.yaml | tee ansible.log
-
+    - name: Setup demo environment from Lab6
+      shell: |
+        cd /home/stack/openstack-labs/Lab6
+        ansible-playbook -i hosts.ini demo.yaml | tee demo.log
