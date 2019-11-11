@@ -21,7 +21,7 @@ vboxmanage hostonlyif create
 # The first network (vboxnet0) will be our management interface. So we need to
 # set the IP address to 192.168.1.0/24 and make sure that there is no DCHP server
 #
-vboxmanage hostonlyif ipconfig vboxnet0 --netmask 255.255.255.0 --ip 192.168.0.1
+vboxmanage hostonlyif ipconfig vboxnet0 --netmask 255.255.255.0 --ip 192.168.1.1
 vboxmanage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
 
 
