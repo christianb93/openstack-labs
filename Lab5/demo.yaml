@@ -49,8 +49,8 @@
         domain: default
         name: demo
         state: present
-    - name: Create demo role
-      os_keystone_role:
+    - name: Create demo user
+      os_user:
         auth:
           auth_url: http://controller:5000/v3
           username: admin
@@ -59,7 +59,10 @@
           os_project_name: "admin"
           password: "{{OS_ADMIN_PASSWORD}}"
         auth_type: password
-        name: demo_role
+        description: "Sample user"
+        domain: default
+        name: demo
+        password: "{{OS_DEMO_PASSWORD}}"
         state: present
     - name: Assign member role to demo user
       os_user_role:
