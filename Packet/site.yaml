@@ -1,0 +1,26 @@
+---
+# This playbook will bring up a Packet bare metal host
+# download the OpenStack labs and run a lab on the remote
+# machine
+
+# 
+# Make sure that DO_TOKEN contains a valid token! You will also 
+# need the packet module
+# pip3 install packet-python
+# and jq and curl installed on the Ansible host
+
+
+- name: Store 
+  hosts: localhost
+  connection: local
+  vars:
+    sizeID: s-6vcpu-16gb
+    packetKeyFile: ~/.ssh/do-stack-key
+    packetKeyName: do-stack-key 
+    packetFacilitySlug: fra2
+    packetSSHConfigFile: "~/.ssh/packet_config"
+  roles:
+  - packet
+
+
+

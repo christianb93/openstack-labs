@@ -1,0 +1,74 @@
+---
+# Get the API token from the environment variable so that
+# we can easily access it
+- name: Get API token
+  set_fact:
+    apiToken: "{{ lookup('env', 'PACKET_API_TOKEN') }}"
+- name: Add SSH key
+  packet_sshkey: 
+    auth_token: "{{apiToken}}"
+    key_file: "{{packetKeyFile}}.pub"
+    label: "{{packetKeyName}}"
+    state: present
+- name: Determine target project
+  shell: |
+     curl -s -H 'X-Auth-Token: {{apiToken}}' https://api.packet.net/projects | jq  -r '.projects[0].id'
+  register: project_data
+  changed_when: false
+- name: Provision machine
+  packet_device:
+    auth_token: "{{apiToken}}"
+    count: 1
+    facility: "{{packetFacilitySlug}}"
+    hostnames: stack0
+    operating_system: ubuntu_18_04
+    plan: x1.small.x86
+    project_id: "{{project_data.stdout}}"
+    wait_for_public_IPv: 4
+    state: active
+  register: packet_data
+# Now add hosts to inventory. Note the usage of loop_control to
+# avoid a long message containing the entire item
+- name: Add IP address to inventory
+  add_host:
+    name: "{{ item.hostname }}"
+    ansible_ssh_host: "{{ item.public_ipv4 }}"
+    ansible_ssh_user: root
+    ansible_ssh_private_key_file: "{{ packetKeyFile }}"
+    host_key_checking: no
+    groups: servers
+  loop: "{{ packet_data.devices }}"
+  loop_control:
+    label: "{{ item.hostname }}"
+# For each host, we also add an entry to .ssh/do_config
+- name: Add host to SSH config file
+  shell: |
+    cat >> {{packetSSHConfigFile}} <<EOF
+    Host "{{item.hostname}}"
+    HostName "{{ item.public_ipv4 }}"
+    User "root"
+    IdentityFile "{{ packetKeyFile }}"
+    CheckHostIP "no"
+    Compression "yes"
+    ForwardX11 "yes"
+    StrictHostKeyChecking "no"
+    EOF
+  loop: "{{ packet_data.devices }}"
+  loop_control:
+    label: "{{ item.hostname }}"
+# Include our file in user-specific ssh-configuration file
+# on the control machine
+- name: Include Packet SSH configuration file
+  lineinfile:
+    create: yes
+    state: present
+    path: ~/.ssh/config
+    line: Include {{packetSSHConfigFile}}
+# And print success message
+- name: Print results
+  debug:
+    msg: "Added host {{ item.hostname }} - use ssh -i {{ packetKeyFile }} -X -C root@{{ item.public_ipv4 }} or ssh  {{ item.hostname }} to connect"
+  loop: "{{ packet_data.devices }}"
+  loop_control:
+    label: "{{ item.hostname }}"
+
