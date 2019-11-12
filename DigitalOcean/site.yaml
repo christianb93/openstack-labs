@@ -34,6 +34,15 @@
       delay: 3
       sleep: 3
 
+#
+# Install a few basic firewall rules on the machine
+#
+- name: Install firewall rules
+  hosts: droplets
+  become: yes
+  roles:
+    - firewall
+
 # The next play starts the actual setup of the machines. We first create a default user
 - name: Basic setup
   hosts: droplets
