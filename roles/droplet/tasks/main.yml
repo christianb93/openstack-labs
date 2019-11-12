@@ -50,7 +50,7 @@
     ssh_keys: [ "{{ keyId }}" ]
     state: "{{ targetState }}"
     unique_name: yes
-    name: "droplet{{ item }}"
+    name: "stack{{ item }}"
     wait: yes
     wait_timeout: 240
     tags:
