@@ -22,5 +22,109 @@
   roles:
   - packet
 
+# The second play will wait until all machines are fully established. Here we use the inventory
+# that we have just created. Note that we have added the hosts with the SSH settings to the inventory,
+# so there is no need to supply the ansible_ssh_private_key_file and ansible_user values
+# We initially do not gather facts, as the SSH daemon might still be starting up, but just wait for
+# the hosts to come up
+- name: Wait for all machines to become ready
+  hosts: servers
+  gather_facts: no
+  tasks:
+  - name: Wait for machine to become reachable
+    wait_for_connection:
+      delay: 3
+      sleep: 3
+
+#
+# Install a few basic firewall rules on the machine
+#
+- name: Install firewall rules
+  hosts: servers
+  become: yes
+  roles:
+    - firewall
+
+
+# 
+# Make sure that the packages that we need to build a kernel module are installed
+#
+- name: Install virtualbox, vagrant and other required packages
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Get output of uname -r
+      shell:
+        uname -r
+      register: 
+        uname_output
+    - name: Install packages required to build a kernel module 
+      apt:
+        force_apt_get: yes
+        name: "{{item}}"
+      loop:
+        - gcc
+        - make
+        - perl
+        - linux-headers-{{uname_output.stdout}}
+    - name: Install all needed packages
+      apt:
+        name: "{{item}}"
+        force_apt_get: yes 
+        update_cache: yes
+        state: latest
+      loop:
+        - virtualbox-dkms
+        - virtualbox
+        - vagrant
+        - git
+        - python3-pip
+        - pwgen
+        - apt-cacher-ng
+    - name: Install Ansible
+      shell: pip3 install 'ansible==v2.8.6'
+
+#
+# Clone the repository and prepare the lab
+#
+- name: Clone repository and prepare Lab
+  hosts: droplets
+  become: yes
+  become_user: stack
+  tasks:
+    - name: Clone repository
+      git:
+        depth: 1
+        dest: /home/stack/openstack-labs
+        force: yes
+        repo: https://github.com/christianb93/openstack-labs     
+    - name: Setup VirtualBox network devices 
+      shell:
+        /home/stack/openstack-labs/scripts/createVBoxNetworks.sh 
+
+# 
+# Now run actual lab
+#
+- name: Run Lab
+  hosts: servers
+  vars:
+    lab: Lab6
+  become: yes
+  become_user: stack
+  tasks:
+    - name: Bring up vagrant
+      shell: |
+        cd /home/stack/openstack-labs/{{lab}}
+        vagrant up
+    - name: Run Ansible script remotely
+      shell: |
+        cd /home/stack/openstack-labs/{{lab}}
+        ansible-playbook -i hosts.ini site.yaml | tee ansible.log
+    - name: Setup demo environment from Lab6
+      shell: |
+        cd /home/stack/openstack-labs/Lab6
+        ansible-playbook -i hosts.ini demo.yaml | tee demo.log
+
+
 
 
