@@ -39,7 +39,9 @@
 # to the local SSH configuration of the user that is running Ansible. We do
 # this by including a file which we now prepare
 - name: Cleanup SSH config file
-  shell: "echo > {{doSSHConfigFile}}"
+  shell: |
+    echo > {{doSSHConfigFile}}
+    chmod 600 {{doSSHConfigFile}}
 # Having the key Id, we can now bring up the machines
 - name: Bring up or stop machines
   digital_ocean_droplet:

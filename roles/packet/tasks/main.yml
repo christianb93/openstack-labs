@@ -40,7 +40,14 @@
   loop: "{{ packet_data.devices }}"
   loop_control:
     label: "{{ item.hostname }}"
-# For each host, we also add an entry to .ssh/do_config
+#  Later, we will add SSH configuration data for the hosts that we provision
+# to the local SSH configuration of the user that is running Ansible. We do
+# this by including a file which we now prepare
+- name: Cleanup SSH config file
+  shell: | 
+    echo > {{packetSSHConfigFile}}
+    chmod 600 {{packetSSHConfigFile}} 
+# For each host, we also add an entry to .ssh/packet_config
 - name: Add host to SSH config file
   shell: |
     cat >> {{packetSSHConfigFile}} <<EOF
