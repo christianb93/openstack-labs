@@ -3,17 +3,17 @@ nova
 
 This role installs the nova service on a node. The following configuration are done compared to the packaged version of the configuration file (nova.conf)
 
-- we set the IP on which the Nova services will be listening to the management IP of the controller node (taken from an inventory variable)
-- we set use_neutron = true to ask Nova to use Neutron instead of the deprecated nova-network
-- we set the firewall_driver to nova.virt.firewall.NoopFirewallDriver to disable it (as described in the comments in the sample configuration)
-- we set the transport_url to connect to the RabbitMQ server on the controller node using the user openstack and its password
-- in the section api, we set the auth_strategy to keystone so that the Nova API service uses Keystone for authentication
-- in the section api_database, we provide the connection string to the MySQL database Nova API for the nova user
-- in the database section, we provide the connection to the nova database
-- in the keystone_authtoken section, we provide the necessary information to use Keystone tokens
-- in the neutron section, we provide connection and authorization settings for the neutron service and the metadata proxy service, including a shared secret
-- in the oslo_concurrency section, we define a path which is used for lock files
-- in the placement section, we define the information that Nova needs to authenticate against the placement service
+* we set the IP on which the Nova services will be listening to the management IP of the controller node (taken from an inventory variable)
+* we set use_neutron = true to ask Nova to use Neutron instead of the deprecated nova-network
+* we set the firewall_driver to nova.virt.firewall.NoopFirewallDriver to disable it (as described in the comments in the sample configuration)
+* we set the transport_url to connect to the RabbitMQ server on the controller node using the user openstack and its password
+* in the section api, we set the auth_strategy to keystone so that the Nova API service uses Keystone for authentication
+* in the section api_database, we provide the connection string to the MySQL database Nova API for the nova user
+* in the database section, we provide the connection to the nova database
+* in the keystone_authtoken section, we provide the necessary information to use Keystone tokens
+* in the neutron section, we provide connection and authorization settings for the neutron service and the metadata proxy service, including a shared secret
+* in the oslo_concurrency section, we define a path which is used for lock files
+* in the placement section, we define the information that Nova needs to authenticate against the placement service
 
 
 Requirements

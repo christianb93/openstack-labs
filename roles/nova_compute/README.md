@@ -5,9 +5,9 @@ This role installs the nova service on a compute node. The configuration for the
 
 First, there is the file nova.conf that we also use on the controller node. The configuration is almost the same as on the control node, with two difference.
 
-1) as the nova-compute service does not connect directly to the MySQL database, we can comment out the DB connection settings
-2) In the section neutron, we not need the part refering to the proxy configuration, as the VNC proxy is running on the controller node only
-3) in the VNC section, we configure the settings for the VNC proxy (see below)
+* as the nova-compute service does not connect directly to the MySQL database, we can comment out the DB connection settings
+* In the section neutron, we not need the part refering to the proxy configuration, as the VNC proxy is running on the controller node only
+* in the VNC section, we configure the settings for the VNC proxy (see below)
 
 In addition to this file, there is a second configuration file which is relevant for the compute node - nova-compute.conf. This file contains two relevant setting - the virtualization driver (where we use the default, libvirt) and the virtualization type.
 

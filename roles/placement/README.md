@@ -3,9 +3,9 @@ placement
 
 This role installs the placement service on a node. The following configuration are done compared to the packaged version of the configuration files.
 
-- we set the authorization strategy to keystone so that the Placement API services uses Keystone to authenticate incoming requests
-- we supply the data in the section keystone_authtoken that placement needs to connect (URL, node on which memcached is running, credentials)
-- we set the SQL connection string in the database section
+* we set the authorization strategy to keystone so that the Placement API services uses Keystone to authenticate incoming requests
+* we supply the data in the section keystone_authtoken that placement needs to connect (URL, node on which memcached is running, credentials)
+* we set the SQL connection string in the database section
 
 Note that the placement service will be running on top of Apache2
 
