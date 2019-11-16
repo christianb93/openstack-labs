@@ -4,7 +4,7 @@
 # machine
 
 # 
-# Make sure that DO_TOKEN contains a valid token! You will also 
+# Make sure that PACKET_API_TOKEN contains a valid token! You will also 
 # need the packet module
 # pip3 install packet-python
 # and jq and curl installed on the Ansible host
@@ -15,8 +15,8 @@
   connection: local
   vars:
     sizeID: s-6vcpu-16gb
-    packetKeyFile: ~/.ssh/do-stack-key
-    packetKeyName: do-stack-key 
+    packetKeyFile: ~/.ssh/packet-default-key
+    packetKeyName: packet-default-key 
     packetFacilitySlug: fra2
     packetSSHConfigFile: "~/.ssh/packet_config"
   roles:
@@ -45,6 +45,13 @@
   roles:
     - firewall
 
+# The next play starts the actual setup of the machines. We first create a default user
+- name: Basic setup
+  hosts: servers
+  vars_files:
+    global_vars.yaml
+  roles:
+  - defaultUser
 
 # 
 # Make sure that the packages that we need to build a kernel module are installed
@@ -58,6 +65,7 @@
         uname -r
       register: 
         uname_output
+      changed_when: False
     - name: Install packages required to build a kernel module 
       apt:
         force_apt_get: yes
@@ -67,15 +75,19 @@
         - make
         - perl
         - linux-headers-{{uname_output.stdout}}
-    - name: Install all needed packages
+    - name: Install Virtualbox and modules
+      apt:
+        name: virtualbox-dkms
+        force_apt_get: yes 
+        state: latest 
+
+    - name: Install all other needed packages
       apt:
         name: "{{item}}"
         force_apt_get: yes 
         update_cache: yes
         state: latest
       loop:
-        - virtualbox-dkms
-        - virtualbox
         - vagrant
         - git
         - python3-pip
@@ -88,7 +100,7 @@
 # Clone the repository and prepare the lab
 #
 - name: Clone repository and prepare Lab
-  hosts: droplets
+  hosts: servers
   become: yes
   become_user: stack
   tasks:
@@ -107,8 +119,8 @@
 #
 - name: Run Lab
   hosts: servers
-  vars:
-    lab: Lab6
+  vars_files:
+    global_vars.yaml
   become: yes
   become_user: stack
   tasks:
@@ -124,7 +136,20 @@
       shell: |
         cd /home/stack/openstack-labs/Lab6
         ansible-playbook -i hosts.ini demo.yaml | tee demo.log
-
-
-
-
+    - name: Get credentials from remote host 
+      fetch:
+        src: "~/.os_credentials/credentials.yaml"
+        dest: .os_credentials/{{inventory_hostname}}-credentials.yaml
+        flat: yes
+    - name: Read credentials 
+      include_vars:
+        file: ".os_credentials/{{inventory_hostname}}-credentials.yaml"
+    - name: Print completion
+      debug:
+        msg: | 
+          Done. To connect to the Horizon dashboard, run an SSH tunnel using 
+          ssh -i {{userPrivateKeyFile}} -L 2080:192.168.1.11:80 stack@{{hostvars.stack0.ansible_ssh_host}} 
+          and point your browser to localhost:2080/horizon. The password for the demo user is 
+          {{OS_DEMO_PASSWORD}}
+          The password for the admin user is
+          {{OS_ADMIN_PASSWORD}}
