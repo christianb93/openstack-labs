@@ -90,14 +90,6 @@
     group: glance
     force: yes
     mode: 0644
-- name: Create glance-registry.conf
-  template:
-    src: "glance-registry.conf.j2"
-    dest: /etc/glance/glance-registry.conf
-    owner: root
-    group: glance
-    force: yes
-    mode: 0644
 - name: Sync glance database
   become_user: glance
   shell:
