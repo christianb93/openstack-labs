@@ -53,89 +53,30 @@
   roles:
   - defaultUser
 
-# 
-# Make sure that the packages that we need to build a kernel module are installed
+
+
 #
-- name: Install virtualbox, vagrant and other required packages
+# Prepare lab host and run lab 
+#
+- name: Prepare lab host and run lab 
+  vars:
+    lab: Lab6
+    run_demo: True 
   hosts: servers
-  become: yes
-  tasks:
-    - name: Get output of uname -r
-      shell:
-        uname -r
-      register: 
-        uname_output
-      changed_when: False
-    - name: Install packages required to build a kernel module 
-      apt:
-        force_apt_get: yes
-        name: "{{item}}"
-      loop:
-        - gcc
-        - make
-        - perl
-        - linux-headers-{{uname_output.stdout}}
-    - name: Install Virtualbox and modules
-      apt:
-        name: virtualbox-dkms
-        force_apt_get: yes 
-        state: latest 
-
-    - name: Install all other needed packages
-      apt:
-        name: "{{item}}"
-        force_apt_get: yes 
-        update_cache: yes
-        state: latest
-      loop:
-        - vagrant
-        - git
-        - python3-pip
-        - pwgen
-        - apt-cacher-ng
-    - name: Install Ansible
-      shell: pip3 install 'ansible==v2.8.6'
+  roles:
+    - labHost
+    - runLab
 
 #
-# Clone the repository and prepare the lab
+# Print completion message and usage instructions
 #
-- name: Clone repository and prepare Lab
-  hosts: servers
-  become: yes
-  become_user: stack
-  tasks:
-    - name: Clone repository
-      git:
-        depth: 1
-        dest: /home/stack/openstack-labs
-        force: yes
-        repo: https://github.com/christianb93/openstack-labs     
-    - name: Setup VirtualBox network devices 
-      shell:
-        /home/stack/openstack-labs/scripts/createVBoxNetworks.sh 
-
-# 
-# Now run actual lab
-#
-- name: Run Lab
+- name: Print completion message and usage instructions
   hosts: servers
   vars_files:
     global_vars.yaml
   become: yes
   become_user: stack
   tasks:
-    - name: Bring up vagrant
-      shell: |
-        cd /home/stack/openstack-labs/{{lab}}
-        vagrant up
-    - name: Run Ansible script remotely
-      shell: |
-        cd /home/stack/openstack-labs/{{lab}}
-        ansible-playbook -i hosts.ini site.yaml | tee ansible.log
-    - name: Setup demo environment from Lab6
-      shell: |
-        cd /home/stack/openstack-labs/Lab6
-        ansible-playbook -i hosts.ini demo.yaml | tee demo.log
     - name: Get credentials from remote host 
       fetch:
         src: "~/.os_credentials/credentials.yaml"
@@ -148,7 +89,7 @@
       debug:
         msg: | 
           Done. To connect to the Horizon dashboard, run an SSH tunnel using 
-          ssh -i {{userPrivateKeyFile}} -L 2080:192.168.1.11:80 stack@{{hostvars.stack0.ansible_ssh_host}} 
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i {{userPrivateKeyFile}} -L 2080:192.168.1.11:80  stack@{{hostvars.stack0.ansible_ssh_host}} 
           and point your browser to localhost:2080/horizon. The password for the demo user is 
           {{OS_DEMO_PASSWORD}}
           The password for the admin user is

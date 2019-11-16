@@ -1,0 +1,41 @@
+---
+#
+# Clone the repository and prepare the lab
+#
+- name: Clone repository
+  become: yes
+  become_user: stack
+  git:
+    depth: 1
+    dest: /home/stack/openstack-labs
+    force: yes
+    repo: https://github.com/christianb93/openstack-labs     
+- name: Setup VirtualBox network devices 
+  become: yes
+  become_user: stack
+  shell:
+    /home/stack/openstack-labs/scripts/createVBoxNetworks.sh 
+
+
+# 
+# Now run actual lab
+#
+- name: Bring up vagrant
+  become: yes
+  become_user: stack
+  shell: |
+    cd /home/stack/openstack-labs/{{lab}}
+    vagrant up
+- name: Run Ansible script remotely
+  become: yes
+  become_user: stack
+  shell: |
+    cd /home/stack/openstack-labs/{{lab}}
+    ansible-playbook -i hosts.ini site.yaml | tee ansible.log
+- name: Setup demo environment 
+  become: yes
+  become_user: stack
+  shell: |
+    cd /home/stack/openstack-labs/{{lab}}
+    ansible-playbook -i hosts.ini demo.yaml | tee demo.log
+  when: run_demo 

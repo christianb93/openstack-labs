@@ -1,0 +1,41 @@
+---
+# 
+# Make sure that the packages that we need to build a kernel module are installed
+#
+- name: Get output of uname -r
+  shell:
+    uname -r
+  register: 
+    uname_output
+  changed_when: False
+- name: Install packages required to build a kernel module 
+  apt:
+    force_apt_get: yes
+    name: "{{item}}"
+  loop:
+    - gcc
+    - make
+    - perl
+    - linux-headers-{{uname_output.stdout}}
+- name: Install Virtualbox and modules
+  apt:
+    name: virtualbox-dkms
+    force_apt_get: yes 
+    state: latest 
+
+- name: Install all other needed packages
+  apt:
+    name: "{{item}}"
+    force_apt_get: yes 
+    update_cache: yes
+    state: latest
+  loop:
+    - vagrant
+    - git
+    - python3-pip
+    - pwgen
+    - apt-cacher-ng
+- name: Install Ansible
+  shell: pip3 install 'ansible==v2.8.6'
+
+

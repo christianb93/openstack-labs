@@ -50,65 +50,41 @@
   - defaultUser
 
 #
-# Now we prepare the actual setup. We need a few packages on the machine
-# 
-- name: Basic setup
-  hosts: droplets
-  become: yes
-  tasks:
-    - name: Install packages
-      apt:
-        name: "{{item}}"
-        force_apt_get: yes 
-        update_cache: yes
-        state: latest
-      loop:
-        - virtualbox
-        - vagrant
-        - git
-        - python3-pip
-        - pwgen
-        - apt-cacher-ng
-    - name: Install Ansible
-      shell: pip3 install 'ansible==v2.8.6'
-    
+# Prepare lab host and run lab 
 #
-# Clone the repository and prepare the lab
-#
-- name: Clone repository and prepare Lab
-  hosts: droplets
-  become: yes
-  become_user: stack
-  tasks:
-    - name: Clone repository
-      git:
-        depth: 1
-        dest: /home/stack/openstack-labs
-        force: yes
-        repo: https://github.com/christianb93/openstack-labs     
-    - name: Setup VirtualBox network devices 
-      shell:
-        /home/stack/openstack-labs/scripts/createVBoxNetworks.sh 
-
-# 
-# Now run actual lab
-#
-- name: Run Lab
-  hosts: droplets
+- name: Prepare lab host and run lab 
   vars:
     lab: Lab6
+    run_demo: True 
+  hosts: droplets
+  roles:
+    - labHost
+    - runLab
+
+#
+# Print completion message and usage instructions
+#
+- name: Print completion message and usage instructions
+  hosts: droplets
+  vars_files:
+    global_vars.yaml
   become: yes
   become_user: stack
   tasks:
-    - name: Bring up vagrant
-      shell: |
-        cd /home/stack/openstack-labs/{{lab}}
-        vagrant up
-    - name: Run Ansible script remotely
-      shell: |
-        cd /home/stack/openstack-labs/{{lab}}
-        ansible-playbook -i hosts.ini site.yaml | tee ansible.log
-    - name: Setup demo environment from Lab6
-      shell: |
-        cd /home/stack/openstack-labs/Lab6
-        ansible-playbook -i hosts.ini demo.yaml | tee demo.log
+    - name: Get credentials from remote host 
+      fetch:
+        src: "~/.os_credentials/credentials.yaml"
+        dest: .os_credentials/{{inventory_hostname}}-credentials.yaml
+        flat: yes
+    - name: Read credentials 
+      include_vars:
+        file: ".os_credentials/{{inventory_hostname}}-credentials.yaml"
+    - name: Print completion
+      debug:
+        msg: | 
+          Done. To connect to the Horizon dashboard, run an SSH tunnel using 
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i {{userPrivateKeyFile}} -L 2080:192.168.1.11:80  stack@{{hostvars.stack0.ansible_ssh_host}} 
+          and point your browser to localhost:2080/horizon. The password for the demo user is 
+          {{OS_DEMO_PASSWORD}}
+          The password for the admin user is
+          {{OS_ADMIN_PASSWORD}}
