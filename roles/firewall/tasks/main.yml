@@ -1,0 +1,17 @@
+---
+# Tasks to install a firewall based on ufw
+- name: Make sure that ufw is installed
+  apt: 
+    force_apt_get: yes
+    update_cache: yes
+    name: ufw
+    state: latest
+- name: Allow SSH connections
+  ufw:
+    name: OpenSSH
+    rule: allow
+- name: Deny all other incoming traffic by default
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
