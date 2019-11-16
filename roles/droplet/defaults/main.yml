@@ -22,3 +22,5 @@ sizeID: s-1vcpu-1gb
 # a separate file that we than include into ~/.ssh/config. This is
 # the name of this file
 doSSHConfigFile: ~/.ssh/do_config
+# Name root to use
+name_root =  stack

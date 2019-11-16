@@ -10,14 +10,14 @@
 # and jq and curl installed on the Ansible host
 
 
-- name: Store 
+- name: Provision machines 
   hosts: localhost
   connection: local
+  vars_files:
+    global_vars.yaml
   vars:
-    sizeID: s-6vcpu-16gb
     packetKeyFile: ~/.ssh/packet-default-key
     packetKeyName: packet-default-key 
-    packetFacilitySlug: fra2
     packetSSHConfigFile: "~/.ssh/packet_config"
   roles:
   - packet
@@ -59,9 +59,8 @@
 # Prepare lab host and run lab 
 #
 - name: Prepare lab host and run lab 
-  vars:
-    lab: Lab6
-    run_demo: True 
+  vars_files:
+    global_vars.yaml
   hosts: servers
   roles:
     - labHost
@@ -89,7 +88,7 @@
       debug:
         msg: | 
           Done. To connect to the Horizon dashboard, run an SSH tunnel using 
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i {{userPrivateKeyFile}} -L 2080:192.168.1.11:80  stack@{{hostvars.stack0.ansible_ssh_host}} 
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i {{userPrivateKeyFile}} -L 2080:192.168.1.11:80  stack@{{hostvars.stack1.ansible_ssh_host}} 
           and point your browser to localhost:2080/horizon. The password for the demo user is 
           {{OS_DEMO_PASSWORD}}
           The password for the admin user is

@@ -10,6 +10,7 @@
       - regionID != ""
       - sizeID != ""
       - doSSHConfigFile != ""
+      - nameRoot != ""
   tags: ['check_vars']
 # Get the API token from the environment variable so that
 # we can easily access it
@@ -52,7 +53,7 @@
     ssh_keys: [ "{{ keyId }}" ]
     state: "{{ targetState }}"
     unique_name: yes
-    name: "stack{{ item }}"
+    name: "{{nameRoot}}{{ item }}"
     wait: yes
     wait_timeout: 240
     tags:

@@ -18,9 +18,9 @@
 - name: Provision machine
   packet_device:
     auth_token: "{{apiToken}}"
-    count: 1
+    count: "{{machineCount}}"
     facility: "{{packetFacilitySlug}}"
-    hostnames: stack0
+    hostnames: "{{nameRoot}}%d"
     operating_system: ubuntu_18_04
     plan: x1.small.x86
     project_id: "{{project_data.stdout}}"

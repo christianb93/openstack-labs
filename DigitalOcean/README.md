@@ -29,4 +29,4 @@ Once the installation is complete, the script will print a short message that te
 
 If the SSH connection times out while trying to reach the remote machine for the first time, simply restart the script - this should work in most cases.
 
-Note that the setup in this lab uses virtualiuzation on top of virtualization on top of a virtualized infrastructure, i.e. the OpenStack VM will run on a Virtualbox VM which in turn will run on a DigitalOcean VM. This is not the most efficient thing to do, and do not expect a breathtaking performance (the installation can easily take 45 min), but it is good enough for a playground.
+Note that the setup in this lab uses virtualization on top of virtualization on top of a virtualized infrastructure, i.e. the OpenStack VM will run on a Virtualbox VM which in turn will run on a DigitalOcean VM. This is not the most efficient thing to do, and do not expect a breathtaking performance (the installation can easily take 45 min), but it is good enough for a playground.

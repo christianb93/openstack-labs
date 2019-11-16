@@ -1,0 +1,7 @@
+---
+packetKeyFile: ~/.ssh/packet-default-key
+packetKeyName: packet-default-key
+packetFacilitySlug: fra2
+nameRoot: stack
+packetSSHConfigFile: ~/.ssh/packet_config
+machineCount: 1

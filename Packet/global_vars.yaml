@@ -1,2 +1,4 @@
+run_demo: True
 lab: Lab6
 userPrivateKeyFile: ~/.ssh/packet-default-key
+packetFacilitySlug: fra2
