@@ -1,2 +1,4 @@
 lab: Lab6
+run_demo: True
 userPrivateKeyFile: ~/.ssh/do-stack-key
+regionID: fra1

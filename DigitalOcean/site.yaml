@@ -13,6 +13,8 @@
 - name: Create machines
   hosts: localhost
   connection: local
+  vars_files:
+    global_vars.yaml
   vars:
     sizeID: s-6vcpu-16gb
     doPrivateKeyFile: ~/.ssh/do-stack-key
@@ -31,8 +33,8 @@
   tasks:
   - name: Wait for machine to become reachable
     wait_for_connection:
-      delay: 3
-      sleep: 3
+      delay: 30
+      sleep: 30
 
 #
 # Install a few basic firewall rules on the machine
@@ -53,9 +55,8 @@
 # Prepare lab host and run lab 
 #
 - name: Prepare lab host and run lab 
-  vars:
-    lab: Lab6
-    run_demo: True 
+  vars_files:
+    global_vars.yaml
   hosts: droplets
   roles:
     - labHost
