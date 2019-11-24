@@ -17,7 +17,7 @@ Let us start with neutron.conf. Here, we make the following changes to the sampl
 * we set the transport_url to allow neutron to talk to our RabbitMQ server
 * in the database section, define the connection string to connect to the neutron database
 * in the section keystone_authtoken, we make the usual changes
-* in the nova section, we provide the credentials for the nova user (!)
+* in the nova section, we provide the credentials for the nova user (!), which are used to inform Nova about the status changes (see above) using the Nova external events REST API
 * in the oslo_concurrency section, we set the path to the directory in which lock files are stored
 
 
@@ -72,6 +72,10 @@ type_drivers - comma-separated list of the type driver that we want to support
 tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
 flat_networks - comma-separated list of flat networks that we provide
 ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There needs to be one mapping for each network that we define
+
+For the following variables, defaults are defined
+
+network_vlan_ranges - physical networks available for VLAN networks and ranges available for tenant networks 
 
 Dependencies
 ------------
