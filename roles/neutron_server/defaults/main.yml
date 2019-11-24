@@ -1,0 +1,3 @@
+---
+# Do not allow any VLAN networks in the default
+network_vlan_ranges: 
