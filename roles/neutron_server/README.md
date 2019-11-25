@@ -76,6 +76,7 @@ ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There n
 For the following variables, defaults are defined
 
 network_vlan_ranges - physical networks available for VLAN networks and ranges available for tenant networks 
+service_plugins - list of service plugins to use
 
 Dependencies
 ------------

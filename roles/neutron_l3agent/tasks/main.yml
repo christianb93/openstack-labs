@@ -1,0 +1,15 @@
+---
+- name: Install L3 agent 
+  apt:
+    force_apt_get: yes
+    state: latest
+    name: neutron-l3-agent
+- name: Create configuration file
+  template:
+    dest: /etc/neutron/l3_agent.ini
+    src: l3_agent.ini.j2
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+  

@@ -1,0 +1,3 @@
+---
+# Enable or disable router related functionality
+horizon_enable_router: False

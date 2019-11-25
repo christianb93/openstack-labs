@@ -372,7 +372,7 @@ OPENSTACK_CINDER_FEATURES = {
 # balancer service, security groups, quotas, VPN service.
 # <!--- CHANGED 
 OPENSTACK_NEUTRON_NETWORK = {
-    'enable_router': False,
+    'enable_router': {{horizon_enable_router}},
     'enable_quotas': False,
     'enable_ipv6': False,
     'enable_distributed_router': False,
