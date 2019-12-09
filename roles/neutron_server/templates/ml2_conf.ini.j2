@@ -286,7 +286,9 @@ network_vlan_ranges = {{network_vlan_ranges}}
 
 # Comma-separated list of <vni_min>:<vni_max> tuples enumerating ranges of
 # VXLAN VNI IDs that are available for tenant network allocation (list value)
-#vni_ranges =
+# <!-- CHANGED
+vni_ranges = {{network_vxlan_ranges}}
+# CHANGED !-->
 
 # Multicast group for VXLAN. When configured, will enable sending all broadcast
 # traffic to this multicast group. When left unconfigured, will disable

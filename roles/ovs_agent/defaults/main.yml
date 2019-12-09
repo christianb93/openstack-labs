@@ -1,0 +1,4 @@
+---
+# Do not support any tunnel types in the default configuration
+ovs_tunnel_types:
+

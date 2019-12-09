@@ -27,6 +27,10 @@ tenant_network_types - comma-separated list of network types that we make availa
 flat_networks - comma-separated list of flat networks that we provide
 ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There needs to be one mapping for each network that we define
 
+For the following variables, defaults are defined:
+
+* ovs_tunnel_types - supported overlay network types 
+
 Dependencies
 ------------
 

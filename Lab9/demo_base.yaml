@@ -1,0 +1,125 @@
+---
+##########################################################################
+# A playbook to set up a demo on a running OpenStack instance. This will
+# run on the instance_node which needs to be present in the inventory.
+#
+# This playbook uses the credentials created by site.yaml
+##########################################################################
+
+- name: Import credentials
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Read credentials
+      include_vars:
+        file: "~/.os_credentials/credentials.yaml"
+
+- name: Prepare for instance launch
+  become: yes
+  hosts: install_node
+  vars_files:
+    - global_vars.yaml
+  tasks:
+    - name: Create m1.nano flavor
+      os_nova_flavor:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: admin
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "admin"
+          password: "{{OS_ADMIN_PASSWORD}}"
+        auth_type: password
+        disk: 1
+        name: m1.nano
+        ram: 128
+        vcpus: 1
+        state: present
+    - name: Create demo project
+      os_project:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: admin
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "admin"
+          password: "{{OS_ADMIN_PASSWORD}}"
+        auth_type: password
+        description: "Sample project"
+        domain: default
+        name: demo
+        state: present
+    - name: Create demo user
+      os_user:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: admin
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "admin"
+          password: "{{OS_ADMIN_PASSWORD}}"
+        auth_type: password
+        description: "Sample user"
+        domain: default
+        name: demo
+        password: "{{OS_DEMO_PASSWORD}}"
+        state: present
+    - name: Assign member role to demo user
+      os_user_role:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: admin
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "admin"
+          password: "{{OS_ADMIN_PASSWORD}}"
+        auth_type: password
+        project: demo
+        user: demo
+        role: member
+        state: present
+    - name: Import key pair as demo user
+      os_keypair:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        name: demo-key
+        public_key_file: "{{install_user_home}}/{{ssh_key_name}}.pub"
+    - name: Allow ICMP traffic for default security group in demo project
+      os_security_group_rule:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        direction: ingress
+        protocol: icmp
+        remote_ip_prefix: "0.0.0.0/0"
+        security_group: default
+        state: present
+    - name: Allow SSH traffic for default security group in demo project
+      os_security_group_rule:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        direction: ingress
+        protocol: tcp
+        port_range_max: 22
+        port_range_min: 22
+        remote_ip_prefix: "0.0.0.0/0"
+        security_group: default
+        state: present
+    

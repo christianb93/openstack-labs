@@ -1,5 +1,7 @@
 ---
-# Do not allow any VLAN networks in the default
+# Do not allow any VLAN networks in the default configuration
 network_vlan_ranges: 
+# Do not allow any VXLAN ranges in the default configuration
+network_vxlan_ranges: 
 # List of service plugins to install 
 service_plugins: 
