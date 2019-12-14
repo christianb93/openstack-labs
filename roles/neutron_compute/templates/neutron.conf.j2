@@ -483,7 +483,7 @@ auth_strategy = keystone
 # https://docs.openstack.org/oslo.messaging/latest/reference/transport.html
 # (string value)
 # <!--- CHANGED
-transport_url = rabbit://openstack:{{rabbitmq_password}}@{{rabbitmq_server_name}}
+transport_url = rabbit://openstack:{{rabbitmq_password}}@{{mq_node}}
 # CHANGED --->
 
 # The default exchange under which topics are scoped. May be overridden by an
@@ -755,9 +755,9 @@ root_helper = "sudo /usr/bin/neutron-rootwrap /etc/neutron/rootwrap.conf"
 [keystone_authtoken]
 
 # <!--- CHANGED
-www_authenticate_uri = http://{{keystone_server_name}}:5000
-auth_url = http://{{keystone_server_name}}:5000
-memcached_servers = {{memcached_server_name}}:11211
+www_authenticate_uri = http://{{api_node}}:5000
+auth_url = http://{{api_node}}:5000
+memcached_servers = {{memcached_node}}:11211
 auth_type = password
 project_domain_name = default
 user_domain_name = default

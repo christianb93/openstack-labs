@@ -70,8 +70,6 @@
   become: yes
   vars_files:
     global_vars.yaml
-  vars:
-    ntp_server_name: controller
   roles:
     - ntpClient
 
@@ -82,12 +80,14 @@
 - name: Install middleware on controller node
   hosts: controller_nodes
   become: yes
+  vars_files:
+    global_vars.yaml
   vars:
-    mariadb_server_ip: "{{hostvars.controller.mgmt_ip}}"
+    mariadb_server_ip: "{{hostvars[db_node].mgmt_ip}}"
     mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
     rabbit_user_name: "openstack"
     rabbit_user_password: "{{OS_SERVICE_PASSWORD}}"
-    memcached_server_ip: "{{hostvars.controller.mgmt_ip}}"
+    memcached_server_ip: "{{hostvars[memcached_node].mgmt_ip}}"
   roles:
     - mariaDB
     - rabbitMQ
@@ -100,8 +100,9 @@
 - name: Install Keystone on controller node
   hosts: controller_nodes
   become: yes
+  vars_files:
+    global_vars.yaml
   vars:
-    mysql_server_name: controller
     keystone_db_user_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - keystone

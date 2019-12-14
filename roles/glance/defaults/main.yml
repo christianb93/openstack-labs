@@ -4,3 +4,4 @@
 # As this is very slow, I have put the image into a public S3 bucket 
 cirros_download_url: "https://s3.eu-central-1.amazonaws.com/cloud.leftasexercise.com"
 
+

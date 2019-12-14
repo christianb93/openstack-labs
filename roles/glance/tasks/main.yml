@@ -1,7 +1,7 @@
 ---
 - name: Create glance database
   mysql_db:
-    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_host: "{{db_node}}"
     name: glance
     state: present
 - name: Create glance user with necessary grants
@@ -11,14 +11,14 @@
     priv: 'glance.*:ALL'
     state: present
     host: "{{item}}"
-    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_host: "{{db_node}}"
   loop:
     - localhost
     - "%"
 - name: Create glance user in keystone
   os_user:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -33,7 +33,7 @@
 - name: Assign admin role to newly created glance user
   os_user_role:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -48,7 +48,7 @@
   os_keystone_service:
     auth:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -61,7 +61,7 @@
 - name: Create endpoints
   os_keystone_endpoint:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -71,7 +71,7 @@
     endpoint_interface: "{{item}}"
     service: glance
     region: RegionOne
-    url: "http://{{inventory_hostname}}:9292"
+    url: "http://{{api_node}}:9292"
     state: present
   loop:
     - public
@@ -106,7 +106,7 @@
 - name: Upload image into glance
   os_image:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"

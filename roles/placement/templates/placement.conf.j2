@@ -212,8 +212,8 @@ auth_strategy = keystone
 
 [keystone_authtoken]
 # <!--- CHANGED
-auth_url = http://{{keystone_server_name}}:5000/v3
-memcached_servers = {{memcached_server_name}}:11211
+auth_url = http://{{api_node}}:5000/v3
+memcached_servers = {{memcached_node}}:11211
 auth_type = password
 project_domain_name = Default
 user_domain_name = Default
@@ -434,7 +434,7 @@ password = {{placement_keystone_user_password}}
 
 [placement_database]
 # <!--- CHANGED
-connection = mysql+pymysql://placement:{{placement_db_user_password}}@{{mysql_server_name}}/placement
+connection = mysql+pymysql://placement:{{placement_db_user_password}}@{{db_node}}/placement
 # CHANGED -->
 #
 # The *Placement API Database* is a the database used with the placement

@@ -1,7 +1,7 @@
 ---
 - name: Create placement database
   mysql_db:
-    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_host: "{{db_node}}"
     name: placement
     state: present
 - name: Create placement user with necessary grants
@@ -11,14 +11,14 @@
     priv: 'placement.*:ALL'
     state: present
     host: "{{item}}"
-    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_host: "{{db_node}}"
   loop:
     - localhost
     - "%"
 - name: Create placement user in keystone
   os_user:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -33,7 +33,7 @@
 - name: Assign admin role to newly created placement user
   os_user_role:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -47,7 +47,7 @@
 - name: Create placement service entity
   os_keystone_service:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -60,7 +60,7 @@
 - name: Create endpoints
   os_keystone_endpoint:
     auth:
-      auth_url: http://{{keystone_server_name}}:5000/v3
+      auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"
       os_project_domain_name: "default"
@@ -70,7 +70,7 @@
     endpoint_interface: "{{item}}"
     service: placement
     region: RegionOne
-    url: "http://{{inventory_hostname}}:8778"
+    url: "http://{{api_node}}:8778"
     state: present
   loop:
     - public

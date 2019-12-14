@@ -16,3 +16,10 @@ vm_network_device: enp0s9
 # The name of the SSH key that we will create and use for the virtual
 # machines spawned by OpenStack
 ssh_key_name: demo-key
+# Node names
+api_node: controller
+db_node: controller
+memcached_node: controller
+ntp_node: controller
+# MariaDB password for root user
+mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"

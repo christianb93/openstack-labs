@@ -14,13 +14,10 @@ vm_network_device: enp0s9
 # machines spawned by OpenStack
 ssh_key_name: demo-key
 # The names of the nodes on which the various components are running
-keystone_server_name: controller
-mysql_server_name: controller
-memcached_server_name: controller
-rabbitmq_server_name: controller
-glance_server_name: controller
-neutron_server_name: controller
-nova_server_name: controller
+api_node: controller
+db_node: controller
+memcached_node: controller
+mq_node: controller
 # The name of the OVS bridge that we will create and to which Neutron will attach
 # to connect to the physical network interfaces
 phys_bridge_name: br-phys

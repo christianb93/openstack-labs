@@ -28,9 +28,9 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-keystone_server_name: the name of the node on which Keystone is running
-mysql_server_name: name of the MySQL server that Glance will use
-memcached_server_name: name of the server on which memcached is running
+api_node: the name of the node on which Keystone is running
+db_node: name of the MySQL server that Glance will use
+memcached_node: name of the server on which memcached is running
 glance_db_user_password - this password will be used when we create the glance DB user
 keystone_admin_password - the password of the admin user in Keystone
 glance_keystone_user_password - the password that we will set for the Glance user in Keystone  

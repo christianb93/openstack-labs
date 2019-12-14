@@ -2070,7 +2070,7 @@
 
 [database]
 # <!--- CHANGED
-connection = mysql+pymysql://glance:{{glance_db_user_password}}@{{mysql_server_name}}/glance
+connection = mysql+pymysql://glance:{{glance_db_user_password}}@{{db_node}}/glance
 # CHANGED --->
 #
 # From oslo.db
@@ -4909,9 +4909,9 @@ disk_formats = ami,ari,aki,vhd,vhdx,vmdk,raw,qcow2,vdi,iso,ploop.root-tar
 
 [keystone_authtoken]
 # <!--- CHANGED
-www_authenticate_uri = http://{{keystone_server_name}}:5000
-auth_url = http://{{keystone_server_name}}:5000
-memcached_servers = {{memcached_server_name}}:11211
+www_authenticate_uri = http://{{api_node}}:5000
+auth_url = http://{{api_node}}:5000
+memcached_servers = {{memcached_node}}:11211
 auth_type = password
 project_domain_name = Default
 user_domain_name = Default

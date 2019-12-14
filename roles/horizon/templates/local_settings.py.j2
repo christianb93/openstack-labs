@@ -177,7 +177,7 @@ SECRET_KEY = secret_key.generate_or_read_from_file('/var/lib/openstack-dashboard
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '{{mgmt_ip}}:11211',
+        'LOCATION': '{{hostvars[memcached_node].mgmt_ip}}:11211',
     },
 }
 # CHANGED --->
@@ -214,7 +214,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #]
 
 # <!--- CHANGED 
-OPENSTACK_HOST = "controller"
+OPENSTACK_HOST = "{{horizon_node}}"
 OPENSTACK_KEYSTONE_URL = "http://%s:5000/v3" % OPENSTACK_HOST
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "member"
 # CHANGED --->

@@ -14,7 +14,7 @@
     chrony_pool
 - name: Add server entry to chrony configuration file
   lineinfile:
-    line: "server {{ntp_server_name}} iburst"
+    line: "server {{ntp_node}} iburst"
     state: present
     path: /etc/chrony/chrony.conf
   register:

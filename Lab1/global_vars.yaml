@@ -16,3 +16,8 @@ vm_network_device: enp0s9
 # The name of the SSH key that we will create and use for the virtual
 # machines spawned by OpenStack
 ssh_key_name: demo-key
+# The name of the API node on which Keystone will later be started
+api_node: controller
+# DB node and Memcached node
+db_node: controller
+memcached_node: controller

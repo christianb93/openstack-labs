@@ -27,6 +27,7 @@ The following variables need to be set when calling this role.
 
 horizon_physical_networks - a  list of physical networks in Python syntax, like ['net1', 'net2']. Needs to match the actual configuration of the OVS agent
 horizon_supported_network_types - a similar list of supported network types, like flat, local, vlan, gre, .. Again this needs to match the Neutron configuration (type drivers)
+memcached_node - name of the node on which memcached is running 
 
 For the following variables, default values are set:
 

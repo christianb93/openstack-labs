@@ -3091,7 +3091,7 @@ firewall_driver = nova.virt.firewall.NoopFirewallDriver
 # https://docs.openstack.org/oslo.messaging/latest/reference/transport.html
 # (string value)
 # <!--- CHANGED
-transport_url = rabbit://openstack:{{rabbitmq_password}}@{{rabbitmq_server_name}}
+transport_url = rabbit://openstack:{{rabbitmq_password}}@{{mq_node}}
 # CHANGED --->
 
 # The default exchange under which topics are scoped. May be overridden by an
@@ -3464,7 +3464,7 @@ auth_strategy = keystone
 
 [api_database]
 # <!--- CHANGED
-connection = mysql+pymysql://nova:{{nova_db_user_password}}@{{mysql_server_name}}/nova_api
+connection = mysql+pymysql://nova:{{nova_db_user_password}}@{{db_node}}/nova_api
 # CHANGED --->
 #
 # The *Nova API Database* is a separate database which is used for information
@@ -4615,7 +4615,7 @@ enable = False
 
 [database]
 # <!--- CHANGED
-connection = mysql+pymysql://nova:{{nova_db_user_password}}@{{mysql_server_name}}/nova
+connection = mysql+pymysql://nova:{{nova_db_user_password}}@{{db_node}}/nova
 # CHANGED --->
 
 
@@ -5318,7 +5318,7 @@ connection = mysql+pymysql://nova:{{nova_db_user_password}}@{{mysql_server_name}
 #   (i.e. "http://10.0.1.0:9292" or "https://my.glance.server/image").
 #  (list value)
 # <!--- CHANGED
-api_servers = http://{{glance_server_name}}:9292
+api_servers = http://{{api_node}}:9292
 # CHANGED --->
 
 #
@@ -6143,8 +6143,8 @@ api_servers = http://{{glance_server_name}}:9292
 
 [keystone_authtoken]
 # <!--- CHANGED
-auth_url = http://{{keystone_server_name}}:5000/v3
-memcached_servers = {{memcached_server_name}}:11211
+auth_url = http://{{api_node}}:5000/v3
+memcached_servers = {{memcached_node}}:11211
 auth_type = password
 project_domain_name = Default
 user_domain_name = Default
@@ -7709,8 +7709,8 @@ password = {{nova_keystone_user_password}}
 # Configuration options for neutron (network connectivity as a service).
 
 # <!--- CHANGED
-url = http://{{neutron_server_name}}:9696
-auth_url = http://{{keystone_server_name}}:5000
+url = http://{{api_node}}:9696
+auth_url = http://{{api_node}}:5000
 auth_type = password
 project_domain_name = default
 user_domain_name = default
@@ -8670,7 +8670,7 @@ project_domain_name = Default
 project_name = service
 auth_type = password
 user_domain_name = Default
-auth_url = http://{{keystone_server_name}}:5000/v3
+auth_url = http://{{api_node}}:5000/v3
 username = placement
 password = {{placement_keystone_user_password}}
 # CHANGED --->

@@ -35,11 +35,9 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-keystone_server_name - the name of node on which Keystone is running  
-memcached_server_name - the name of the node on which memcached is running
-rabbitmq_server_name - the name on which the RabbitMQ service is running
-glance_server_name - the name of the node on which Glance is running
-neutron_server_name - the name on which the Neutron server will be running
+api_node - the name of node on which Keystone is running  
+memcached_node - the name of the node on which memcached is running
+mq_node - the name on which the RabbitMQ service is running
 neutron_keystone_user_password - the password of the neutron Keystone user
 rabbitmq_password - the password to use for the openstack user in RabbitMQ
 keystone_admin_password - the password of the admin user in keystone

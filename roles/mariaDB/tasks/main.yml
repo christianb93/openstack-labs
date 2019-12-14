@@ -27,3 +27,12 @@
     password: "{{mariadb_root_password}}"
     state: present
     login_unix_socket: /var/run/mysqld/mysqld.sock
+- name: Create MariaDB root user with all privileges and GRANT option
+  mysql_user:
+    name: root
+    password: "{{mariadb_root_password}}"
+    priv: '*.*:ALL,GRANT'
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    host: "%"
+  
