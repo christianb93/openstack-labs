@@ -13,10 +13,12 @@ for if in $iflist; do
 done
 
 #
-# Now create two new interfaces. They will be called vboxnet0 and vboxnet1
+# Now create three new interfaces. They will be called vboxnet0, vboxnet1 and vboxnet2
 #
 vboxmanage hostonlyif create
 vboxmanage hostonlyif create
+vboxmanage hostonlyif create
+
 #
 # The first network (vboxnet0) will be our management interface. So we need to
 # set the IP address to 192.168.1.0/24 and make sure that there is no DCHP server
@@ -26,11 +28,12 @@ vboxmanage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
 
 
 #
-# The first network will be our VM network. We use the CIDR 172.16.0.0/24
+# The second network will be our provider network. We use the CIDR 172.16.0.0/24
 # and disable DHCP as well
 #
 vboxmanage hostonlyif ipconfig vboxnet1 --netmask 255.255.255.0 --ip 172.16.0.1
 vboxmanage dhcpserver remove --netname HostInterfaceNetworking-vboxnet1
+
 
 #
 # Create some output to be able to check that everything worked
@@ -38,3 +41,4 @@ vboxmanage dhcpserver remove --netname HostInterfaceNetworking-vboxnet1
 vboxmanage list hostonlyifs
 ip addr show dev vboxnet0
 ip addr show dev vboxnet1
+ip addr show dev vboxnet2

@@ -1,4 +1,5 @@
 ---
 # Do not support any tunnel types in the default configuration
 ovs_tunnel_types:
-
+# The IP on to which we bind the VXLAN ports
+underlay_ip: "{{mgmt_ip}}"

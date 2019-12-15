@@ -39,6 +39,7 @@
 - name: Bring up VM network device
   shell:
     ip link set {{vm_network_device}} up
+  when: vm_network_device != ""
 
 - name: Ensure entries for all nodes exist in /etc/hosts
   lineinfile:
