@@ -13,13 +13,25 @@ vm_network_device: enp0s9
 # The name of the SSH key that we will create and use for the virtual
 # machines spawned by OpenStack
 ssh_key_name: demo-key
-# The names of the nodes on which the various components are running
-api_node: controller
-db_node: controller
-memcached_node: controller
-mq_node: controller
 # The name of the OVS bridge that we will create and to which Neutron will attach
 # to connect to the physical network interfaces
 phys_bridge_name: br-phys
 # The interface which we attach to this bridge to provide connectivity
 phys_interface: enp0s9
+# The password for the MariaDB root user
+mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
+# Node setup
+api_node: controller
+db_node: controller
+ntp_node: controller
+memcached_node: controller
+mq_node: controller
+# Network configuration
+type_drivers: "local, flat, vlan"
+tenant_network_types: ""
+flat_networks: "physnet"
+network_vlan_ranges: "physnet"
+service_plugins: "router"
+ovs_bridge_mappings: "physnet:br-phys"
+
+

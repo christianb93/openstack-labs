@@ -70,8 +70,6 @@
   become: yes
   vars_files:
     global_vars.yaml
-  vars:
-    ntp_node: controller
   roles:
     - ntpClient
 
@@ -82,9 +80,9 @@
 - name: Install middleware on controller node
   hosts: controller_nodes
   become: yes
+  vars_files:
+    global_vars.yaml
   vars:
-    db_node: controller
-    memcached_node: controller
     mariadb_server_ip: "{{hostvars[db_node].mgmt_ip}}"
     mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
     rabbit_user_name: "openstack"
@@ -102,8 +100,9 @@
 - name: Install Keystone on controller node
   hosts: controller_nodes
   become: yes
+  vars_files:
+    global_vars.yaml
   vars:
-    db_node: controller
     keystone_db_user_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - keystone
@@ -216,18 +215,22 @@
     nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
     keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
-    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
-    type_drivers: "local, flat, vlan, vxlan"
-    tenant_network_types: "vxlan"
-    flat_networks: "physnet"
-    ovs_bridge_mappings: "physnet:br-phys"
-    network_vlan_ranges: "physnet"
-    network_vxlan_ranges: "2000:2100"
-    service_plugins: "router"
-    ovs_tunnel_types: "vxlan"
   roles:
     - neutron_server
 
+- name: Install Neutron agents
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"    
+  roles:
+    - neutron_agents
 
 - name: Install L3 agent 
   hosts: controller_nodes
@@ -247,13 +250,6 @@
     keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
     neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    type_drivers: "local, flat, vlan, vxlan"
-    tenant_network_types: "vxlan"
-    flat_networks: "physnet"
-    ovs_bridge_mappings: "physnet:br-phys"
-    network_vlan_ranges: "physnet"
-    network_vxlan_ranges: "2000:2100"
-    ovs_tunnel_types: "vxlan"
   roles:
     - neutron_compute
 
