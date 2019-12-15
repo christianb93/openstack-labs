@@ -1,0 +1,33 @@
+---
+- name: Install neutron packages
+  apt:
+    force_apt_get: yes
+    name: "{{item}}"
+    state: latest
+  loop:
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+- name: Create DHCP agent configuration file
+  template:
+    src: dhcp_agent.ini.j2
+    dest: /etc/neutron/dhcp_agent.ini
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+- name: Create metadata agent configuration file
+  template:
+    src: "metadata_agent.ini.j2"
+    dest: /etc/neutron/metadata_agent.ini
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
+- name: Restart services
+  service:
+    state: restarted
+    name: "{{item}}"
+  loop:
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+    - neutron-openvswitch-agent

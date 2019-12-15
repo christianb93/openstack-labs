@@ -2,16 +2,20 @@
 - name: Create glance database
   mysql_db:
     login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
     name: glance
     state: present
 - name: Create glance user with necessary grants
   mysql_user:
+    login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
     name: glance
     password: "{{glance_db_user_password}}"
     priv: 'glance.*:ALL'
     state: present
     host: "{{item}}"
-    login_host: "{{db_node}}"
   loop:
     - localhost
     - "%"

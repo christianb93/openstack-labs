@@ -70,8 +70,6 @@
   become: yes
   vars_files:
     global_vars.yaml
-  vars:
-    ntp_node: controller
   roles:
     - ntpClient
 
@@ -82,9 +80,9 @@
 - name: Install middleware on controller node
   hosts: controller_nodes
   become: yes
+  vars_files:
+    global_vars.yaml
   vars:
-    db_node: controller
-    memcached_node: controller
     mariadb_server_ip: "{{hostvars[db_node].mgmt_ip}}"
     mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
     rabbit_user_name: "openstack"
@@ -102,8 +100,9 @@
 - name: Install Keystone on controller node
   hosts: controller_nodes
   become: yes
+  vars_files:
+    global_vars.yaml
   vars:
-    db_node: controller
     keystone_db_user_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - keystone
@@ -216,13 +215,26 @@
     nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
     keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
-    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
+    type_drivers: "local, flat"
+    tenant_network_types: ""
+    flat_networks: "physnet"
+  roles:
+    - neutron_server
+
+- name: Install Neutron agents
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
     type_drivers: "local, flat"
     tenant_network_types: ""
     flat_networks: "physnet"
     ovs_bridge_mappings: "physnet:br-phys"
+    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
   roles:
-    - neutron_server
+    - neutron_agents
+
 
 - name: Finalize Neutron configuration on compute nodes
   hosts: compute_nodes

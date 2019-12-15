@@ -2,16 +2,20 @@
 - name: Create placement database
   mysql_db:
     login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
     name: placement
     state: present
 - name: Create placement user with necessary grants
   mysql_user:
+    login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
     name: placement
     password: "{{placement_db_user_password}}"
     priv: 'placement.*:ALL'
     state: present
     host: "{{item}}"
-    login_host: "{{db_node}}"
   loop:
     - localhost
     - "%"

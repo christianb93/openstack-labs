@@ -2,16 +2,20 @@
 - name: Create neutron database
   mysql_db:
     login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
     name: neutron
     state: present
 - name: Create neutron user with necessary grants
   mysql_user:
+    login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
     name: neutron
     password: "{{neutron_db_user_password}}"
     priv: 'neutron.*:ALL'
     state: present
     host: "{{item}}"
-    login_host: "{{db_node}}"
   loop:
     - localhost
     - "%"
@@ -84,8 +88,6 @@
   loop:
     - neutron-server
     - neutron-plugin-ml2
-    - neutron-dhcp-agent
-    - neutron-metadata-agent
 - name: Create configuration file neutron.conf
   template:
     dest: /etc/neutron/neutron.conf
@@ -102,22 +104,6 @@
     group: neutron
     force: yes
     mode: 0644
-- name: Create DHCP agent configuration file
-  template:
-    src: dhcp_agent.ini.j2
-    dest: /etc/neutron/dhcp_agent.ini
-    owner: root
-    group: neutron
-    force: yes
-    mode: 0644
-- name: Create metadata agent configuration file
-  template:
-    src: "metadata_agent.ini.j2"
-    dest: /etc/neutron/metadata_agent.ini
-    owner: root
-    group: neutron
-    force: yes
-    mode: 0644
 - name: Sync neutron database
   become: yes
   become_user: neutron
@@ -130,6 +116,3 @@
   loop:
     - nova-api
     - neutron-server
-    - neutron-dhcp-agent
-    - neutron-metadata-agent
-    - neutron-openvswitch-agent
