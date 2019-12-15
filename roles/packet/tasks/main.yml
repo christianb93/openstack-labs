@@ -22,7 +22,7 @@
     facility: "{{packetFacilitySlug}}"
     hostnames: "{{nameRoot}}%d"
     operating_system: ubuntu_18_04
-    plan: x1.small.x86
+    plan: c1.small.x86
     project_id: "{{project_data.stdout}}"
     wait_for_public_IPv: 4
     state: active
