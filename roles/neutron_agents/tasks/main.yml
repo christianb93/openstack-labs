@@ -7,6 +7,14 @@
   loop:
     - neutron-dhcp-agent
     - neutron-metadata-agent
+- name: Create configuration file neutron.conf
+  template:
+    dest: /etc/neutron/neutron.conf
+    src: neutron.conf.j2
+    owner: root
+    group: neutron
+    force: yes
+    mode: 0644
 - name: Create DHCP agent configuration file
   template:
     src: dhcp_agent.ini.j2

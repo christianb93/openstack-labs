@@ -232,6 +232,10 @@
     flat_networks: "physnet"
     ovs_bridge_mappings: "physnet:br-phys"
     metadata_shared_secret: "{{OS_SHARED_SECRET}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - neutron_agents
 

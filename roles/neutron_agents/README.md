@@ -24,6 +24,10 @@ Finally, there is the configuration for the metadata agent.
 * we need to specify the name of the node on which the nova server is running in nova_metadata_host
 * we also need to specify the shared secret that is used to protect the traffic between the nova metadata server and neutron - this needs to be the same secret as in the nova configuration
 
+In addition, the agents also need some of the configuration in the main configuration file neutron.conf. To allow the controller and network nodes to be on the same host, we use the same configuration for this file on both the network node and the controller node.
+
+
+
 
 Requirements
 ------------
@@ -36,13 +40,22 @@ Role Variables
 The following variables need to be set when calling this role.
 
 api_node - the name of the node on which Nova is running
+mq_node - the name of the node on which RabbitMQ is running
+db_node - the node on which the database is running
+memcached_node - the node on which Memcached is running
+rabbitmq_password- the password for RabbitMQ
+neutron_db_user_password - the password for the Neutron DB user
+neutron_keystone_user_password - the password for the Neutron user in Keystone
+nova_keystone_user_password - the password for the Nova user in Keystone
 metadata_shared_secret - the shared secret for the connection between the metadata proxy and Nova
 type_drivers - comma-separated list of the type driver that we want to support
 tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
 flat_networks - comma-separated list of flat networks that we provide
 ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There needs to be one mapping for each network that we define
 
+For the following variables, defaults are provided.
 
+service_plugins - list of service plugins to be included
 
 Dependencies
 ------------
