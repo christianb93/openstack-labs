@@ -1,3 +1,5 @@
 ---
 # List of service plugins to install 
 service_plugins: 
+# Global MTU
+global_mtu: 1500

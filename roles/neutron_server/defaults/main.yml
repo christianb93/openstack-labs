@@ -5,3 +5,5 @@ network_vlan_ranges:
 network_vxlan_ranges: 
 # List of service plugins to install 
 service_plugins: 
+# MTU of underlying network 
+global_mtu: 1500

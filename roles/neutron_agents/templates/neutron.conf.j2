@@ -143,7 +143,9 @@ notify_nova_on_port_data_changes = true
 # neutron automatically subtracts the overlay protocol overhead from this
 # value. Defaults to 1500, the standard value for Ethernet. (integer value)
 # Deprecated group/name - [ml2]/segment_mtu
-#global_physnet_mtu = 1500
+# <!--- CHANGED 
+global_physnet_mtu = {{global_mtu}}
+# CHANGED --->
 
 # Number of backlog requests to configure the socket with (integer value)
 #backlog = 4096
