@@ -36,15 +36,21 @@
 # Perform basic setup steps on all nodes. This will
 # - distribute credentials
 # - set up networking
+# - make sure that the APT proxy is used
 # - register the Cloud APT repository
 # - install the python3 openstack client
 #
 - name: Basic node setup
   hosts: all
   become: yes
+  vars:
+    # Change this to False if you do not have an APT proxy installed
+    use_apt_proxy: True
+    # If you use a proxy, this needs to be the URL under which the proxy is
+    # reachable from within each of the virtual machines (controller, compute node, network node)
+    apt_proxy_url:  http://192.168.1.1:3142
   vars_files:
     - global_vars.yaml
-    - "{{playbook_dir}}/../conf/apt_proxy.yaml"
   roles:
     - nodeSetup
 
@@ -187,6 +193,7 @@
       shell:
         nova-manage cell_v2 discover_hosts
 
+
 - name: Bring up OVS bridge br-ext on all nodes except the controller
   hosts: network_nodes, compute_nodes
   become: yes
@@ -198,7 +205,26 @@
         bridge: "{{phys_interface}}"
         fail_mode: secure
         state: present
+    - name: Create patch port
+      openvswitch_port:
+        bridge: "{{phys_interface}}"
+        port: "patch-{{phys_bridge_name}}"
+        set: "interface patch-{{phys_bridge_name}} type=patch options:peer=patch-{{phys_interface}}"
 
+
+- name: Assign IP address to br-ext and bring up interface on network node
+  hosts: network_nodes 
+  become: yes 
+  tasks:
+  - name: Add flow 
+    command: 
+      ovs-ofctl add-flow br-ext priority=0,actions=NORMAL
+  - name: Assign IP address
+    shell: |
+      ip addr add 172.16.0.1/24 dev br-ext
+      exit 0
+  - name: Bring up interface
+    command: ip link set br-ext up
 
 
 - name: Bring up and wire up OVS bridge br-phys on all nodes except the controller
@@ -212,11 +238,11 @@
         bridge: "{{phys_bridge_name}}"
         fail_mode: secure
         state: present
-    - name: Attach physical network interface to br-ext
+    - name: Attach br-ext
       openvswitch_port:
         bridge: "{{phys_bridge_name}}"
         port: "patch-{{phys_interface}}"
-        set: "interface patch-{{phys_interface}} type=patch options:peer={{phys_interface}}"
+        set: "interface patch-{{phys_interface}} type=patch options:peer=patch-{{phys_bridge_name}}"
 
 
 - name: Install Neutron on controller nodes

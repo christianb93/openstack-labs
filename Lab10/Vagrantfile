@@ -22,6 +22,7 @@ Vagrant.configure("2") do |config|
     controller.vm.network "forwarded_port", guest: 22, host: 8222
     controller.vm.provider "virtualbox" do |v|
       v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
       v.memory = 6144
       v.cpus = 2
     end
@@ -38,6 +39,7 @@ Vagrant.configure("2") do |config|
     network.vm.provider "virtualbox" do |v|
       v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
       v.memory = 4096
       v.cpus = 2
     end
@@ -52,7 +54,8 @@ Vagrant.configure("2") do |config|
     compute1.vm.provider "virtualbox" do |v|
       v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
-      v.memory = 4096
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.memory = 2048
       v.cpus = 2
     end
   end
@@ -66,7 +69,8 @@ Vagrant.configure("2") do |config|
     compute2.vm.provider "virtualbox" do |v|
       v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
-      v.memory = 4096
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.memory = 2048
       v.cpus = 2
     end
   end
