@@ -64,7 +64,10 @@ variable "underlay_network_cidr" {
   default = "192.168.2.0/24"
 }
 
-
+# IP address of the machine on which Terraform is running
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
 
 ###############################################################################
 # Networks
@@ -96,9 +99,11 @@ resource "google_compute_firewall" "public-firewall" {
   }
 
   allow {
-    protocol = "tcp"
-    ports    = ["22", "80", "6080"]
+    protocol      = "tcp"
+    ports         = ["22", "80", "6080"]
   }
+
+  # source_ranges = ["${chomp(data.http.myip.body)}/32"]
 
 }
 
@@ -196,6 +201,7 @@ resource "google_compute_instance" "controller" {
     ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
   }
 
+  metadata_startup_script = "sudo apt-get -y remove sshguard"
   
   network_interface {
     # This is the public interface, attached to our public network
@@ -230,6 +236,7 @@ resource "google_compute_instance" "network" {
     ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
   }
 
+  metadata_startup_script = "sudo apt-get -y remove sshguard"
   
   network_interface {
     # This is the public interface, attached to our public network
@@ -256,10 +263,9 @@ resource "google_compute_instance" "network" {
 } 
 
 
-
 resource "google_compute_instance" "compute" {
   name         = "compute${count.index}"
-  machine_type = "n1-standard-4"
+  machine_type = "n1-standard-2"
   count = 2
 
   boot_disk {
@@ -271,16 +277,6 @@ resource "google_compute_instance" "compute" {
   metadata = {
     ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
   }
-
-  
-  network_interface {
-    # This is the public interface, attached to our public network
-    network       = google_compute_network.public-vpc.self_link
-    subnetwork    = google_compute_subnetwork.public-subnetwork.self_link
-    access_config {
-    }
-  }
-
 
   network_interface {
     # This is the management interface, attached to our management network
@@ -296,9 +292,7 @@ resource "google_compute_instance" "compute" {
     network_ip    = "192.168.2.2${count.index+1}"
   }
 
-
 }
-
 
 
 output "inventory" {
@@ -323,12 +317,12 @@ output "inventory" {
         "private_key_file" : "${var.vagrant_private_ssh_key_file}"
       } ],
       [ for s in google_compute_instance.compute[*] : {
-        # the Ansible groups to which we will assign the server
+        # Note that we use the management IP as SSH target IP as we use the controller as the jump host
         "groups"           : "['compute_nodes']",
         "name"             : "${s.name}",
-        "ip"               : "${s.network_interface.0.access_config.0.nat_ip }",
-        "mgmt_ip"          : "${s.network_interface.1.network_ip}",
-        "underlay_ip"      : "${s.network_interface.2.network_ip}",
+        "ip"               : "${s.network_interface.0.network_ip}",
+        "mgmt_ip"          : "${s.network_interface.0.network_ip}",
+        "underlay_ip"      : "${s.network_interface.1.network_ip}",
         "ansible_ssh_user" : "vagrant",
         "private_key_file" : "${var.vagrant_private_ssh_key_file}"
       } ]
