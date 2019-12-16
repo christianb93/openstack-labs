@@ -211,22 +211,6 @@
         port: "patch-{{phys_bridge_name}}"
         set: "interface patch-{{phys_bridge_name}} type=patch options:peer=patch-{{phys_interface}}"
 
-
-- name: Assign IP address to br-ext and bring up interface on network node
-  hosts: network_nodes 
-  become: yes 
-  tasks:
-  - name: Add flow 
-    command: 
-      ovs-ofctl add-flow br-ext priority=0,actions=NORMAL
-  - name: Assign IP address
-    shell: |
-      ip addr add 172.16.0.1/24 dev br-ext
-      exit 0
-  - name: Bring up interface
-    command: ip link set br-ext up
-
-
 - name: Bring up and wire up OVS bridge br-phys on all nodes except the controller
   hosts: network_nodes, compute_nodes
   become: yes
@@ -244,6 +228,14 @@
         port: "patch-{{phys_interface}}"
         set: "interface patch-{{phys_interface}} type=patch options:peer=patch-{{phys_bridge_name}}"
 
+- name: Establish routing on network node to provide external connectivity for instances 
+  hosts: network_nodes
+  become: yes
+  vars:
+    public_interface: enp0s3
+    br_ext_ip_address: "172.16.0.1/24"
+  roles:
+    - router
 
 - name: Install Neutron on controller nodes
   hosts: controller_nodes

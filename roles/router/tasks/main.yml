@@ -1,0 +1,26 @@
+---
+- name: Install iptables-persistent
+  apt:
+    force_apt_get: yes
+    update_cache: yes
+    name: iptables-persistent
+    state: present 
+- name: Create rules 
+  template:
+    src: rules.v4.j2
+    dest: /etc/iptables/rules.v4
+    owner: root
+    force: yes
+    mode: 0600
+- name: Load rules once 
+  shell:
+    iptables-restore /etc/iptables/rules.v4
+- name: Add NORMAL flow to br-ext
+  command: 
+    ovs-ofctl add-flow br-ext priority=0,actions=NORMAL
+- name: Assign IP address to br-ext
+  shell: |
+    ip addr add {{br_ext_ip_address}} dev br-ext
+    exit 0
+- name: Bring up interface
+  command: ip link set br-ext up
