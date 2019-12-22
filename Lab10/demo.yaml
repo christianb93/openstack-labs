@@ -216,6 +216,24 @@
       loop:
         - demo-instance-1
         - demo-instance-2
+    - name: Create an instance in the flat network
+      os_server:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        name: demo-instance-3
+        auto_ip: no
+        flavor: m1.nano
+        image: cirros
+        key_name: "{{ssh_key_name}}"
+        network: flat-network
+        security_groups:
+          - default
     - name: Retrieve server list
       os_server_facts:
         auth:

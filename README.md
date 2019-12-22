@@ -11,6 +11,7 @@ A collection of scripts and Ansible playbooks around OpenStack. Here is a list o
 * Lab7 - Add a VLAN network as a provider network
 * Lab8 - Install a virtual router using the Neutron L3 agent
 * Lab9 - Allow a tenant to provision VXLAN networks
+* Lab10 - Introduce a separate network node on which the Neutron agents run
 
 In addition, this repository contains scripts to bring up an OpenStack playground on various cloud platform - a cloud in the cloud.
 
