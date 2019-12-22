@@ -36,6 +36,8 @@ COMMIT
 -A INPUT -i {{public_interface}} -p tcp --destination-port 22 -j ACCEPT
 -A INPUT -i {{public_interface}} -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -i {{public_interface}} -j DROP
+-A INPUT -i br-ext -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i br-ext -j DROP
 COMMIT
 
 
