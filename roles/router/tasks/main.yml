@@ -25,6 +25,6 @@
 - name: Bring up interface
   command: ip link set dev {{phys_interface}} up
 - name: Set MTU 
-  command: ip link set dev {{phys_interface}} mtu 1460
+  command: ip link set dev {{phys_interface}} mtu {{br_ext_mtu}}
 - name: Allow IP forwarding
   shell: echo 1 > /proc/sys/net/ipv4/ip_forward

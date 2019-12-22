@@ -180,6 +180,7 @@
   vars:
     public_interface: ens4
     br_ext_ip_address: "172.16.0.1/24"
+    br_ext_mtu: 1410
   roles:
     - router
 
