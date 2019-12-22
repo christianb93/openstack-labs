@@ -15,3 +15,10 @@ credentials.yaml
 
 # Log files
 *.log
+
+# Terraform state files
+*.tfstate
+*.tfstate.backup
+.terraform
+
+
