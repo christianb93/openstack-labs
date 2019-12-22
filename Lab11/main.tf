@@ -163,7 +163,7 @@ resource "google_compute_subnetwork" "underlay-subnetwork" {
 # Add firewall rules to allow all incoming traffic on the management network
 resource "google_compute_firewall" "underlay-firewall" {
   name    = "underlay-firewall"
-  network = google_compute_network.management-vpc.self_link
+  network = google_compute_network.underlay-vpc.self_link
 
   allow {
     protocol = "tcp"
