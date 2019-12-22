@@ -8,14 +8,17 @@
 - name: Add host to SSH config file
   shell: |
     cat >> ~/.ssh/ansible_created_config <<EOF
-    Host "{{item[0]}}"
-    HostName "{{ item[1].ansible_ssh_host }}"
-    User "{{ item[1].ansible_ssh_user }}"
-    IdentityFile "{{ item[1].ansible_ssh_private_key_file }}"
-    CheckHostIP "no"
-    Compression "yes"
-    ForwardX11 "yes"
-    StrictHostKeyChecking "no"
+    Host {{item[0]}}
+        HostName "{{ item[1].ansible_ssh_host }}"
+        User "{{ item[1].ansible_ssh_user }}"
+        IdentityFile "{{ item[1].ansible_ssh_private_key_file }}"
+        CheckHostIP "no"
+        Compression "yes"
+        ForwardX11 "yes"
+        StrictHostKeyChecking "no"
+        UserKnownHostsFile /dev/null
+        {{ item[1].extra_ssh_config_items | default("")}}
+
     EOF
   loop: "{{ hostvars.items() }}"
   loop_control:
@@ -24,5 +27,6 @@
   lineinfile:
     create: yes
     state: present
+    insertbefore: BOF
     path: ~/.ssh/config
     line: Include ~/.ssh/ansible_created_config

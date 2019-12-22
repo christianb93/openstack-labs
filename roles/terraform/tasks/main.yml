@@ -30,8 +30,11 @@
     ansible_ssh_host: "{{ item.ip }}"
     ansible_ssh_user: "{{item.ansible_ssh_user}}"
     ansible_ssh_private_key_file: "{{item.private_key_file}}"
+    ansible_ssh_common_args: "{{item.ssh_args}}"
     host_key_checking: false
     ansible_python_interpreter: /usr/bin/python3
     groups: "{{ item.groups }}"
     mgmt_ip: "{{ item.mgmt_ip }}"
+    underlay_ip: "{{ item.underlay_ip }}"
+    extra_ssh_config_items: "{{ item.extra_ssh_config_items | default('') }}"
   loop: "{{ tf_results.outputs.inventory.value }}"

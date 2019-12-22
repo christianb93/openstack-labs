@@ -305,7 +305,8 @@ output "inventory" {
         "mgmt_ip"          : "${google_compute_instance.controller.network_interface.1.network_ip}",
         "underlay_ip"      : "",
         "ansible_ssh_user" : "vagrant",
-        "private_key_file" : "${var.vagrant_private_ssh_key_file}"
+        "private_key_file" : "${var.vagrant_private_ssh_key_file}",
+        "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" 
       } ],
       [ {
         "groups"           : "['network_nodes']",
@@ -314,17 +315,20 @@ output "inventory" {
         "mgmt_ip"          : "${google_compute_instance.network.network_interface.1.network_ip}",
         "underlay_ip"      : "${google_compute_instance.network.network_interface.2.network_ip}",
         "ansible_ssh_user" : "vagrant",
-        "private_key_file" : "${var.vagrant_private_ssh_key_file}"
+        "private_key_file" : "${var.vagrant_private_ssh_key_file}",
+        "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" 
       } ],
       [ for s in google_compute_instance.compute[*] : {
-        # Note that we use the management IP as SSH target IP as we use the controller as the jump host
-        "groups"           : "['compute_nodes']",
-        "name"             : "${s.name}",
-        "ip"               : "${s.network_interface.0.network_ip}",
-        "mgmt_ip"          : "${s.network_interface.0.network_ip}",
-        "underlay_ip"      : "${s.network_interface.1.network_ip}",
-        "ansible_ssh_user" : "vagrant",
-        "private_key_file" : "${var.vagrant_private_ssh_key_file}"
+        # Note that we use the management IP as SSH target IP as we use the network node as the jump host
+        "groups"                : "['compute_nodes']",
+        "name"                    : "${s.name}",
+        "ip"                      : "${s.network_interface.0.network_ip}",
+        "mgmt_ip"                 : "${s.network_interface.0.network_ip}",
+        "underlay_ip"             : "${s.network_interface.1.network_ip}",
+        "ansible_ssh_user"        : "vagrant",
+        "private_key_file"        : "${var.vagrant_private_ssh_key_file}",
+        "extra_ssh_config_items"  :  "ProxyJump network",
+        "ssh_args"                : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o \"ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.vagrant_private_ssh_key_file} -W %h:%p vagrant@${google_compute_instance.network.network_interface.0.access_config.0.nat_ip}\"" 
       } ]
    )
 }
