@@ -27,6 +27,7 @@ COMMIT
 # and reply to connected traffic
 # Do not set the INPUT policy to DROP, as this would also drop all traffic
 # on the management and underlay networks
+# We also allow ICMP traffic so that instances can ping the gateway
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD DROP [0:0]
@@ -37,6 +38,7 @@ COMMIT
 -A INPUT -i {{public_interface}} -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -i {{public_interface}} -j DROP
 -A INPUT -i br-ext -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i br-ext -p icmp -j ACCEPT
 -A INPUT -i br-ext -j DROP
 COMMIT
 
