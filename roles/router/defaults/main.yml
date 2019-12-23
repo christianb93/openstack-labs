@@ -1,3 +1,3 @@
 ---
-# MTU that we use for br-ext
-br_ext_mtu: 1450
+# MTU that we use for the internal interface
+internal_interface_mtu: 1450

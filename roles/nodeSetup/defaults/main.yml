@@ -5,3 +5,5 @@ openstack_release: stein
 use_apt_proxy: False
 # URL of the proxy  - only relevant if the above option is set to True
 apt_proxy_url:
+# Create and wire up a physical bridge on this node
+phys_bridge_create: False

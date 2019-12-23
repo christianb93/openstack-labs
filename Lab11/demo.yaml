@@ -194,6 +194,20 @@
         state: present
         allocation_pool_start: 172.16.0.2
         allocation_pool_end:  172.16.0.10
+    - name: Create router to access our instances from the flat network
+      os_router:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        interfaces:
+          vxlan-subnet
+        name: demo-router
+        network: flat-network   
 
 
 - name: Create test instances and show results
@@ -255,20 +269,6 @@
     - name: Show output
       debug:
         var: server_info
-    - name: Create router to access our instances from the flat network
-      os_router:
-        auth:
-          auth_url: http://controller:5000/v3
-          username: demo
-          os_user_domain_name: "default"
-          os_project_domain_name: "default"
-          os_project_name: "demo"
-          password: "{{OS_DEMO_PASSWORD}}"
-        auth_type: password
-        interfaces:
-          vxlan-subnet
-        name: demo-router
-        network: flat-network   
     - name: Associate floating IP address
       os_floating_ip:
         auth:

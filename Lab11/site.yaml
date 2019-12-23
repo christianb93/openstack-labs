@@ -95,81 +95,41 @@
     # Use the APT proxy running on the controller
     use_apt_proxy: True
     apt_proxy_url:  http://{{hostvars.controller.mgmt_ip}}:3142
+    # Also create br-phys
+    phys_bridge_create: True
   vars_files:
     - global_vars.yaml
   roles:
     - nodeSetup
 
 
-- name: Bring up OVS bridge br-ext on all nodes except the controller
-  hosts: compute_nodes, network_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  tasks:
-    - name: Create OVS bridge br-ext
-      openvswitch_bridge:
-        bridge: "{{phys_interface}}"
-        fail_mode: secure
-        state: present
-    - name: Create patch port
-      openvswitch_port:
-        bridge: "{{phys_interface}}"
-        port: "patch-{{phys_bridge_name}}"
-        set: "interface patch-{{phys_bridge_name}} type=patch options:peer=patch-{{phys_interface}}"
-
-
-- name: Connect br-ext on all compute nodes to br-ext on the network node via VXLAN VID 100
-  hosts: compute_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  tasks:
-    - name: Create VXLAN interface
-      openvswitch_port:
-        bridge: "{{phys_interface}}"
-        port: "vxlan-network"
-        set: "interface vxlan-network type=vxlan options:remote_ip={{hostvars.network.underlay_ip}} options:key=100"
-    - name: Add NORMAL flow to br-ext
-      command: 
-        ovs-ofctl add-flow {{phys_interface}} priority=0,actions=NORMAL
-
-
-
-- name: On the network node, add VXLAN ports to br-ext for all compute nodes 
+- name: Create and wire up br-ext on network node
   hosts: network_nodes
   become: yes
   vars_files:
     global_vars.yaml
-  tasks: 
-    - name: Create VXLAN interface for each compute node 
-      openvswitch_port:
-        bridge: "{{phys_interface}}"
-        port: "vxlan-{{item}}"
-        set: "interface vxlan-{{item}} type=vxlan options:remote_ip={{hostvars[item].underlay_ip}} options:key=100"
-      loop:
-        "{{ groups.compute_nodes}}"
-     
+  vars:
+    bridge_name: "{{phys_interface}}"
+    patch_port_local_name: "patch-{{phys_bridge_name}}"
+    patch_port_peer_name: "patch-{{phys_interface}}"
+    vxlan_nodes: "{{ groups.compute_nodes  | map('extract', hostvars, 'underlay_ip') | list}}"
+    vxlan_id: 100
+  roles:
+    - vxlan_bridge
 
-
-- name: Bring up and wire up OVS bridge br-phys on all nodes except the controller
-  hosts: network_nodes, compute_nodes
+- name: Create and wire up br-ext on compute nodes
+  hosts: compute_nodes
   become: yes
   vars_files:
     global_vars.yaml
-  tasks:
-    - name: Create OVS bridge br-phys
-      openvswitch_bridge:
-        bridge: "{{phys_bridge_name}}"
-        fail_mode: secure
-        state: present
-    - name: Attach br-ext
-      openvswitch_port:
-        bridge: "{{phys_bridge_name}}"
-        port: "patch-{{phys_interface}}"
-        set: "interface patch-{{phys_interface}} type=patch options:peer=patch-{{phys_bridge_name}}"
-
-
+  vars:
+    bridge_name: "{{phys_interface}}"
+    patch_port_local_name: "patch-{{phys_bridge_name}}"
+    patch_port_peer_name: "patch-{{phys_interface}}"
+    vxlan_peer: "{{hostvars.network.underlay_ip}}"
+    vxlan_id: 100
+  roles:
+    - vxlan_node
 
 
 - name: Establish routing on network node to provide external connectivity for instances 
@@ -179,8 +139,9 @@
     global_vars.yaml
   vars:
     public_interface: ens4
-    br_ext_ip_address: "172.16.0.1/24"
-    br_ext_mtu: 1410
+    internal_interface: "{{phys_interface}}"
+    internal_ip_address: "172.16.0.1/24"
+    internal_interface_mtu: 1410
   roles:
     - router
 

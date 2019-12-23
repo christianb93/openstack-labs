@@ -1,0 +1,21 @@
+---
+- name: Create OVS bridge 
+  openvswitch_bridge:
+    bridge: "{{bridge_name}}"
+    fail_mode: secure
+    state: present
+- name: Create patch port
+  openvswitch_port:
+    bridge: "{{bridge_name}}"
+    port: "{{patch_port_local_name}}"
+    set: "interface {{patch_port_local_name}} type=patch options:peer={{patch_port_peer_name}}"
+- name: Create VXLAN ports pointing to all nodes 
+  openvswitch_port:
+    bridge: "{{bridge_name}}"
+    port: "vxlan-{{item}}"
+    set: "interface vxlan-{{item}} type=vxlan options:remote_ip={{item}} options:key={{vxlan_id}}"
+  loop:
+    "{{vxlan_nodes}}"
+- name: Add NORMAL flow to bridge
+  command: 
+    ovs-ofctl add-flow {{bridge_name}} priority=0,actions=NORMAL

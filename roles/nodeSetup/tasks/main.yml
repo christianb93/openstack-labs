@@ -33,14 +33,10 @@
     owner: "{{install_user}}"
     group: "{{install_user}}"
     mode: 0700
-#
-# Bring up all devices and set up name resolution
-#
-- name: Bring up VM network device
-  shell:
-    ip link set {{vm_network_device}} up
-  when: vm_network_device != ""
 
+# 
+# Set up name resolution
+#
 - name: Ensure entries for all nodes exist in /etc/hosts
   lineinfile:
     line: "{{ item[1].mgmt_ip}} {{ item[0] }}"
@@ -50,6 +46,7 @@
     "{{ hostvars.items() | list }}"
   loop_control:
     label: "{{ item[0] }}"
+
 
 
 #
@@ -88,3 +85,28 @@
     name: ifupdown
     force_apt_get: yes
     state: present
+
+
+# Network setup
+# * bring up unnumbered VM network device if specified
+# * enable name resolution
+# * create and wire up physical bridge if specified
+#
+- name: Bring up VM network device
+  shell:
+    ip link set {{vm_network_device}} up
+  when: vm_network_device != ""
+
+
+- name: Create OVS bridge br-phys
+  openvswitch_bridge:
+    bridge: "{{phys_bridge_name}}"
+    fail_mode: secure
+    state: present
+  when: phys_bridge_create
+- name: Attach external interface
+  openvswitch_port:
+    bridge: "{{phys_bridge_name}}"
+    port: "patch-{{phys_interface}}"
+    set: "interface patch-{{phys_interface}} type=patch options:peer=patch-{{phys_bridge_name}}"
+  when: phys_bridge_create
