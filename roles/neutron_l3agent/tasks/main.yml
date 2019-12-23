@@ -12,8 +12,8 @@
     group: neutron
     force: yes
     mode: 0644
-  - name: Restart L3 agent
-    service:
-      state: restarted
-      name: neutron-l3-agent
+- name: Restart L3 agent
+  service:
+    state: restarted
+    name: neutron-l3-agent
   

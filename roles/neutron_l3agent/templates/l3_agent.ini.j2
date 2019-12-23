@@ -81,9 +81,7 @@ interface_driver = openvswitch
 #prefix_delegation_driver = dibbler
 
 # Allow running metadata proxy. (boolean value)
-# <!--- CHANGED
-enable_metadata_proxy = false 
-# CHANGED --->
+enable_metadata_proxy = true
 
 # Iptables mangle mark used to mark metadata valid requests. This mark will be
 # masked with 0xffff so that only the lower 16 bits will be used. (string
