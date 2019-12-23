@@ -36,4 +36,6 @@ ovs_bridge_mappings: "physnet:br-phys"
 ovs_tunnel_types: "vxlan"
 # Use the public IP address of the controller node for the VNC proxy URL
 vnc_ip: "{{hostvars.controller.ansible_ssh_host}}"
+# Global MTU on GCE is only 1460 due to GRE encapsulation
+global_mtu: 1460
 
