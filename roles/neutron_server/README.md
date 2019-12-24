@@ -57,7 +57,7 @@ For the following variables, defaults are defined
 * service_plugins - list of service plugins to use
 * network_vlan_ranges - physical networks available for VLAN networks and ranges available for tenant networks 
 * network_vxlan_ranges - list of ranges that can be used for the VXLAN ids of tenant networks
-
+* physical_network_mtus - list of specific network to MTU mappings
 
 
 

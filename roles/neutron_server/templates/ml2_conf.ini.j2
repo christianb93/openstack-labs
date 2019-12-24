@@ -206,7 +206,9 @@ extension_drivers = port_security
 # mapping is <physnet>:<mtu val>. This mapping allows specifying a physical
 # network MTU value that differs from the default global_physnet_mtu value.
 # (list value)
-#physical_network_mtus =
+# <!-- CHANGED
+physical_network_mtus = {{physical_network_mtus}}
+# CHANGED --->
 
 # Default network type for external networks when no provider attributes are
 # specified. By default it is None, which means that if provider attributes are

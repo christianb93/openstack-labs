@@ -7,3 +7,5 @@ network_vxlan_ranges:
 service_plugins: 
 # MTU of underlying network 
 global_mtu: 1500
+# Explicit MTU mapping per physical network which can be used to override the global setting
+physical_network_mtus: 

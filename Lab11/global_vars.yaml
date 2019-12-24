@@ -38,4 +38,6 @@ ovs_tunnel_types: "vxlan"
 vnc_ip: "{{hostvars.controller.ansible_ssh_host}}"
 # Global MTU on GCE is only 1460 due to GRE encapsulation
 global_mtu: 1460
-
+# As we realize the network that Neutron sees as physical network as a VXLAN network, we need
+# to tell Neutron about the lower MTU
+physical_network_mtus: "physnet:1410"
