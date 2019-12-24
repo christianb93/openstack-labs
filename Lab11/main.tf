@@ -103,7 +103,9 @@ resource "google_compute_firewall" "public-firewall" {
     ports         = ["22", "80", "6080"]
   }
 
-  # source_ranges = ["${chomp(data.http.myip.body)}/32"]
+  # If you loose connectivity to your instance and want to use the browser-based
+  # SSH from Google's console, uncomment the line below and re-apply 
+  source_ranges = ["${chomp(data.http.myip.body)}/32"]
 
 }
 
