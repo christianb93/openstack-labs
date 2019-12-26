@@ -3,3 +3,6 @@
 service_plugins: 
 # Global MTU
 global_mtu: 1500
+# Global DNS server to use if no DNS server is specified on the subnet level
+# this is the cloudflare DNS server
+global_dns_servers: 1.1.1.1

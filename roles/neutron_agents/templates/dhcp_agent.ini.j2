@@ -80,7 +80,9 @@ enable_isolated_metadata = true
 
 # Comma-separated list of the DNS servers which will be used as forwarders.
 # (list value)
-#dnsmasq_dns_servers =
+# <!--- CHANGED
+dnsmasq_dns_servers = {{global_dns_servers}}
+# CHANGED --->
 
 # Base log dir for dnsmasq logging. The log contains DHCP and DNS log
 # information and is useful for debugging issues with either DHCP or DNS. If

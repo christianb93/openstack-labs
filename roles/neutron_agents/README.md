@@ -56,6 +56,7 @@ ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There n
 For the following variables, defaults are provided.
 
 service_plugins - list of service plugins to be included
+global_dns_servers - a list of DNS servers to use if no other DNS server is specified for a subnet
 
 Dependencies
 ------------
