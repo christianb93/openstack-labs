@@ -1,0 +1,47 @@
+
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+
+
+ 
+  config.vm.define "server" do |server|
+    server.vm.hostname = "server"
+    server.vm.box = "ubuntu/bionic64"
+    server.vm.network "private_network", ip: "192.168.1.11", name: 'vboxnet0'
+    server.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      # Create and attach a disk with 10 GB. If this fails, check whether the HDD already exists with 
+      # vboxmanage list hdds 
+      # and if yes, remove it using vboxmanage closemedium UUID and also delete the file vhd.img
+      # We use port 2 of the existing SCSI controller as adding an SATA controller will 
+      # cause issues with the boot order
+      # This disk will be visible as /dev/sdc inside the machine
+      v.customize ["createhd", "disk", "--filename", "./vhd.img", "--size", 10 * 1024]
+      v.customize ["storageattach", :id, "--storagectl", "SCSI", "--port", 2, "--device", 0, "--type", "hdd", "--medium", "./vhd.img"]
+      v.memory = 2048
+      v.cpus = 2
+    end
+  # Install target daemon
+  server.vm.provision "shell",
+    inline: "sudo apt-get update && sudo apt-get -y install tgt"
+  end
+
+
+  config.vm.define "client" do |client|
+    client.vm.hostname = "client"
+    client.vm.box = "ubuntu/bionic64"
+    client.vm.network "private_network", ip: "192.168.1.12", name: 'vboxnet0'
+    client.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.memory = 2048
+      v.cpus = 2
+    end
+  # Install Open iSCSI and lsscsi
+  client.vm.provision "shell",
+    inline: "sudo apt-get update && sudo apt-get -y install open-iscsi lsscsi"
+  end
+
+end
