@@ -13,6 +13,7 @@ A collection of scripts and Ansible playbooks around OpenStack. Here is a list o
 * Lab9 - Allow a tenant to provision VXLAN networks
 * Lab10 - Introduce a separate network node on which the Neutron agents run
 * Lab11 - Play with iSCSI
+* Lab12 - LVM playground
 
 In addition, this repository contains scripts to bring up an OpenStack playground on various cloud platform - a cloud in the cloud.
 
