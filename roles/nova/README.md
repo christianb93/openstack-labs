@@ -38,6 +38,10 @@ nova_keystone_user_password - the password that we will set for the nova user in
 placement_keystone_user_password - the password of the placement Keystone user
 metadata_shared_secret - a secret shared between Nova and Neutron for metadata proxy requests
 
+For the following variable, a default is defined. 
+
+cinder_os_region_name - name of the region that Nova uses when looking for a cinder service, set this to the region name used for the cinder configuration when you want to use cinder
+
 
 Dependencies
 ------------

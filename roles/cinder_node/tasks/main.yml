@@ -1,0 +1,57 @@
+---
+- name: Install LVM
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    name: "{{item}}"
+    state: latest
+  loop:
+    - lvm2
+    - tgt
+- name: Check whether physical volume already exists
+  shell: 
+    sudo pvscan -s | grep "{{cinder_storage_device}}" | wc -l
+  register: 
+    pvscan
+- name: output 
+  debug:
+    var: pvscan
+- name: Create physical volume
+  shell: |
+    pvcreate  {{cinder_storage_device}}
+  when: 
+    pvscan.stdout == "0"
+- name: Check whether volume group already exists
+  shell: 
+    sudo vgscan  | grep "cinder-volumes" | wc -l
+  register: 
+    vgscan
+- name: Create volume group
+  shell: |
+    vgcreate cinder-volumes  {{cinder_storage_device}}
+  when: 
+    vgscan.stdout == "0"
+- name: Install Cinder packages
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    name: "{{item}}"
+    state: latest
+  loop:
+    - thin-provisioning-tools
+    - cinder-volume
+- name: Create the cinder.conf configuration file 
+  template:
+    src: "cinder.conf.j2"
+    dest: /etc/cinder/cinder.conf
+    owner: root
+    group: cinder
+    force: yes
+    mode: 0644
+- name: Restart cinder
+  service:
+    name: "{{item}}"
+    state: restarted
+  loop: 
+    - tgt
+    - cinder-volume

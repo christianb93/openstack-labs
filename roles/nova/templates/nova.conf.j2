@@ -4216,7 +4216,9 @@ enable = False
 #
 # * Any string representing region name
 #  (string value)
-#os_region_name = <None>
+# <!--- CHANGED
+os_region_name = {{cinder_os_region_name}}
+# CHANGED ---> 
 
 #
 # Number of times cinderclient should retry on any failed http call.

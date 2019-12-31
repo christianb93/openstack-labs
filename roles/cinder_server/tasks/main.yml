@@ -1,0 +1,141 @@
+---
+- name: Create cinder database
+  mysql_db:
+    login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
+    name: cinder
+    state: present
+- name: Create cinder user with necessary grants
+  mysql_user:
+    login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
+    name: cinder
+    password: "{{cinder_db_user_password}}"
+    priv: 'cinder.*:ALL'
+    state: present
+    host: "{{item}}"
+  loop:
+    - localhost
+    - "%"
+- name: Create cinder user in keystone
+  os_user:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    description: "Cinder user"
+    name: "cinder"
+    domain: "default"
+    password: "{{cinder_keystone_user_password}}"
+    state: present
+- name: Assign admin role to newly created cinder user
+  os_user_role:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    project: service
+    user: cinder
+    role: admin
+    state: present
+- name: Create cinder v2 service entity
+  os_keystone_service:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    name: cinderv2
+    service_type: volumev2
+    state: present
+- name: Create cinder v3 service entity
+  os_keystone_service:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    name: cinderv3
+    service_type: volumev3
+    state: present
+- name: Create endpoints for v2 API
+  os_keystone_endpoint:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    endpoint_interface: "{{item}}"
+    service: cinderv2
+    region: RegionOne
+    url: "http://{{api_node}}:8776/v2/%(project_id)s"
+    state: present
+  loop:
+    - public
+    - internal
+    - admin
+- name: Create endpoints for v3 API
+  os_keystone_endpoint:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    endpoint_interface: "{{item}}"
+    service: cinderv3
+    region: RegionOne
+    url: "http://{{api_node}}:8776/v3/%(project_id)s"
+    state: present
+  loop:
+    - public
+    - internal
+    - admin
+- name: Install APT packages
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    name: "{{item}}"
+    state: latest
+  loop:
+    - cinder-api
+    - cinder-scheduler
+- name: Create the cinder.conf configuration file 
+  template:
+    src: "cinder.conf.j2"
+    dest: /etc/cinder/cinder.conf
+    owner: root
+    group: cinder
+    force: yes
+    mode: 0644
+- name: Populate cinder database
+  shell: 
+    su -s /bin/sh -c "cinder-manage db sync" cinder
+- name: Restart cinder
+  service:
+    name: "{{item}}"
+    state: restarted
+  loop: 
+    - apache2
+    - cinder-scheduler

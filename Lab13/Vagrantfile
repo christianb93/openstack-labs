@@ -1,0 +1,84 @@
+
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+
+  # Uncomment this if you want to bring up
+  # the  machines with a GUI
+  #config.vm.provider "virtualbox" do |v|
+  #  v.gui = true
+  #end
+
+
+
+  config.vm.define "controller" do |controller|
+    controller.vm.hostname = "controller"
+    controller.vm.box = "ubuntu/bionic64"
+    # This configuration assumes that we have already created two hostonly 
+    # If this has not been done, please run the script ../scripts/createVBoxNetworks.sh
+    controller.vm.network "private_network", ip: "192.168.1.11", name: 'vboxnet0'
+    controller.vm.network "forwarded_port", guest: 22, host: 8222
+    controller.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.memory = 6144
+      v.cpus = 2
+    end
+  end
+
+  config.vm.define "network" do |network|
+    # This configuration assumes that we have already created two hostonly 
+    # If this has not been done, please run the script ../scripts/createVBoxNetworks.sh
+    network.vm.hostname = "network"
+    network.vm.box = "ubuntu/bionic64"
+    network.vm.network "private_network", ip: "192.168.1.12", name: 'vboxnet0'
+    network.vm.network "private_network", ip: "192.168.2.12",  name: 'vboxnet2'
+    network.vm.network "forwarded_port", guest: 22, host: 8223
+    network.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.memory = 4096
+      v.cpus = 2
+    end
+  end
+
+  config.vm.define "compute1" do |compute1|
+    compute1.vm.hostname = "compute1"
+    compute1.vm.box = "ubuntu/bionic64"
+    compute1.vm.network "private_network", ip: "192.168.1.21", name: 'vboxnet0'
+    compute1.vm.network "private_network", ip: "192.168.2.21",  name: 'vboxnet2'
+    compute1.vm.network "forwarded_port", guest: 22, host: 8200
+    compute1.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.memory = 4096
+      v.cpus = 2
+    end
+  end
+
+  config.vm.define "storage" do |storage|
+    storage.vm.hostname = "storage"
+    storage.vm.box = "ubuntu/bionic64"
+    storage.vm.network "private_network", ip: "192.168.1.31", name: 'vboxnet0'
+    storage.vm.network "forwarded_port", guest: 22, host: 8210
+    storage.vm.provider "virtualbox" do |v|
+      # Create and attach a disk with 10 GB. If this fails, check whether the HDD already exists with 
+      # vboxmanage list hdds 
+      # and if yes, remove it using vboxmanage closemedium UUID and also delete the file vhd.img
+      # We use port 2 of the existing SCSI controller as adding an SATA controller will 
+      # cause issues with the boot order
+      # This disk will be visible as /dev/sdc inside the machine
+      v.customize ["createhd", "disk", "--filename", "./vhd.img", "--size", 10 * 1024]
+      v.customize ["storageattach", :id, "--storagectl", "SCSI", "--port", 2, "--device", 0, "--type", "hdd", "--medium", "./vhd.img"]    
+      v.customize ["modifyvm", :id, "--ioapic", "on"]
+      v.memory = 2048
+      v.cpus = 2
+    end
+  end
+
+
+end

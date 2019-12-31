@@ -1,0 +1,345 @@
+#
+# Create credentials
+#
+- name: Create credentials
+  hosts: localhost
+  vars_files:
+    - global_vars.yaml
+  roles:
+    - prepareCredentials
+
+
+#
+# Now import the credentials just created. We cannot
+# include this in vars_files as the file is not yet
+# present when we run the playbook.
+#
+- name: Import credentials
+  hosts: all
+  gather_facts: no
+  vars_files:
+    global_vars.yaml
+  tasks:
+    - name: Read credentials
+      include_vars:
+        file: "{{credentials_dir}}/credentials.yaml"
+
+# Make sure that all hosts are up before proceeding
+- name: Check connectivity
+  hosts: all
+  tasks:
+    - name: Check connectivity
+      ping:
+
+
+#
+# Perform basic setup steps on all nodes. This will
+# - distribute credentials
+# - set up networking
+# - make sure that the APT proxy is used
+# - register the Cloud APT repository
+# - install the python3 openstack client
+#
+- name: Basic node setup (controller and storage nodes)
+  hosts: controller_nodes, storage_nodes
+  become: yes
+  vars:
+    # Change this to False if you do not have an APT proxy installed
+    use_apt_proxy: True
+    # If you use a proxy, this needs to be the URL under which the proxy is
+    # reachable from within each of the virtual machines (controller, compute node, network node)
+    apt_proxy_url:  http://192.168.1.1:3142
+  vars_files:
+    - global_vars.yaml
+  roles:
+    - nodeSetup
+
+- name: Basic node setup (network nodes, compute nodes)
+  hosts: network_nodes, compute_nodes
+  become: yes
+  vars:
+    # Change this to False if you do not have an APT proxy installed
+    use_apt_proxy: True
+    # If you use a proxy, this needs to be the URL under which the proxy is
+    # reachable from within each of the virtual machines (controller, compute node, network node)
+    apt_proxy_url:  http://192.168.1.1:3142
+    # Also create br-phys
+    phys_bridge_create: True
+  vars_files:
+    - global_vars.yaml
+  roles:
+    - nodeSetup
+
+
+- name: Create and wire up br-ext on network node
+  hosts: network_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    bridge_name: "{{phys_interface}}"
+    patch_port_local_name: "patch-{{phys_bridge_name}}"
+    patch_port_peer_name: "patch-{{phys_interface}}"
+    vxlan_nodes: "{{ groups.compute_nodes  | map('extract', hostvars, 'underlay_ip') | list}}"
+    vxlan_id: 100
+  roles:
+    - vxlan_bridge
+
+- name: Create and wire up br-ext on compute nodes
+  hosts: compute_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    bridge_name: "{{phys_interface}}"
+    patch_port_local_name: "patch-{{phys_bridge_name}}"
+    patch_port_peer_name: "patch-{{phys_interface}}"
+    vxlan_peer: "{{hostvars.network.underlay_ip}}"
+    vxlan_id: 100
+  roles:
+    - vxlan_node
+     
+
+- name: Establish routing on network node to provide external connectivity for instances 
+  hosts: network_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    public_interface: "{{router_public_interface}}"
+    internal_interface: "{{phys_interface}}"
+    internal_ip_address: "172.16.0.1/24"
+    internal_interface_mtu: 1450
+  roles:
+    - router
+
+
+#
+# Set up the controller node as NTP server
+#
+- name: Install NTP on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    ntp_network_cidr: "{{management_network_cidr}}"
+  roles:
+    - ntpServer
+
+#
+# Set up the compute nodes, network nodes and storage nodes as NTP clients
+#
+- name: Install NTP client on other nodes nodes
+  hosts: compute_nodes, network_nodes, storage_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  roles:
+    - ntpClient
+
+
+#
+# Install MariaDB, Memcached and RabbitMQ on the controller
+#
+- name: Install middleware on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    mariadb_server_ip: "{{hostvars[db_node].mgmt_ip}}"
+    mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
+    rabbit_user_name: "openstack"
+    rabbit_user_password: "{{OS_SERVICE_PASSWORD}}"
+    memcached_server_ip: "{{hostvars[memcached_node].mgmt_ip}}"
+  roles:
+    - mariaDB
+    - rabbitMQ
+    - memcached
+
+
+#
+# Install Keystone on the controller node
+#
+- name: Install Keystone on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - keystone
+
+
+#
+# Install Glance on the controller node
+#
+- name: Install Glance on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    glance_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    glance_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - glance
+
+#
+# Install Placement on the controller node
+#
+- name: Install Placement on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    placement_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - placement
+
+
+- name: Install Cinder on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    cinder_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    cinder_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - cinder_server
+
+
+- name: Install Cinder on storage nodes
+  hosts: storage_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    cinder_storage_device: "/dev/sdc"
+    cinder_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    cinder_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - cinder_node
+
+#
+# Install Nova on the controller node
+#
+- name: Install Nova on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    nova_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
+    cinder_os_region_name: "RegionOne"
+  roles:
+    - nova
+
+
+#
+# Install Nova on the compute nodes
+#
+- name: Install Nova on compute nodes
+  hosts: compute_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    nova_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - nova_compute
+
+
+- name: Discover compute hosts
+  hosts: controller_nodes
+  become: yes
+  become_user: nova
+  tasks:
+    - name: Discover compute hosts
+      shell:
+        nova-manage cell_v2 discover_hosts
+
+
+- name: Install Neutron on controller nodes
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    neutron_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - neutron_server
+
+- name: Install Neutron agents on network node
+  hosts: network_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"    
+  roles:
+    - neutron_agents
+
+- name: Install L3 agent 
+  hosts: network_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  roles:
+    - neutron_l3agent
+
+
+- name: Finalize Neutron configuration on compute nodes
+  hosts: compute_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - neutron_compute
+
+- name: Install Horizon
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    horizon_physical_networks: "['physnet']"
+    horizon_supported_network_types: "['flat', 'vxlan']"
+    horizon_enable_router: True
+  roles:
+    - horizon
+
+

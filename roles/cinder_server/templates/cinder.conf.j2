@@ -1,0 +1,39 @@
+[DEFAULT]
+rootwrap_config = /etc/cinder/rootwrap.conf
+api_paste_confg = /etc/cinder/api-paste.ini
+iscsi_helper = tgtadm
+volume_name_template = volume-%s
+volume_group = cinder-volumes
+verbose = True
+auth_strategy = keystone
+state_path = /var/lib/cinder
+lock_path = /var/lock/cinder
+volumes_dir = /var/lib/cinder/volumes
+enabled_backends = lvm
+# <!--- CHANGED
+transport_url = rabbit://openstack:{{rabbitmq_password}}@{{mq_node}}
+# CHANGED --->
+
+
+[database]
+# <!--- CHANGED
+connection = mysql+pymysql://cinder:{{cinder_db_user_password}}@{{db_node}}/cinder
+# CHANGED --->
+
+# <!--- CHANGED
+[keystone_authtoken]
+www_authenticate_uri = http://{{api_node}}:5000
+auth_url = http://{{api_node}}:5000
+memcached_servers = "{{memcached_node}}:11211"
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = cinder
+password = "{{cinder_keystone_user_password}}"
+# CHANGED --->
+
+# <!--- CHANGED
+# IP address of this host. We use the management IP
+my_ip = "{{mgmt_ip}}"
+# CHANGED --->

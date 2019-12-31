@@ -1,0 +1,4 @@
+---
+#  name of the region that Nova uses when looking for a cinder service, 
+# set this to the region name used for the cinder configuration when you want to use cinder
+cinder_os_region_name:  
