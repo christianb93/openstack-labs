@@ -8,6 +8,14 @@
   roles:
     - prepareCredentials
 
+# Make sure that all hosts are up before proceeding
+- name: Check connectivity
+  hosts: all
+  tasks:
+    - name: Check connectivity
+      ping:
+
+
 
 #
 # Now import the credentials just created. We cannot
@@ -24,52 +32,27 @@
       include_vars:
         file: "{{credentials_dir}}/credentials.yaml"
 
-# Make sure that all hosts are up before proceeding
-- name: Check connectivity
+#
+# Perform basic setup steps on all nodes. Among other things,
+# this will set up the APT configuration, so make sure that the
+# group_vars are reflecting the network setup. Here we also create
+# a physical bridge br-phys if needed 
+#
+- name: Basic node setup 
   hosts: all
-  tasks:
-    - name: Check connectivity
-      ping:
-
-
-#
-# Perform basic setup steps on all nodes. This will
-# - distribute credentials
-# - set up networking
-# - make sure that the APT proxy is used
-# - register the Cloud APT repository
-# - install the python3 openstack client
-#
-- name: Basic node setup (controller and storage nodes)
-  hosts: controller_nodes, storage_nodes
   become: yes
-  vars:
-    # Change this to False if you do not have an APT proxy installed
-    use_apt_proxy: True
-    # If you use a proxy, this needs to be the URL under which the proxy is
-    # reachable from within each of the virtual machines (controller, compute node, network node)
-    apt_proxy_url:  http://192.168.1.1:3142
   vars_files:
     - global_vars.yaml
   roles:
     - nodeSetup
 
-- name: Basic node setup (network nodes, compute nodes)
-  hosts: network_nodes, compute_nodes
-  become: yes
-  vars:
-    # Change this to False if you do not have an APT proxy installed
-    use_apt_proxy: True
-    # If you use a proxy, this needs to be the URL under which the proxy is
-    # reachable from within each of the virtual machines (controller, compute node, network node)
-    apt_proxy_url:  http://192.168.1.1:3142
-    # Also create br-phys
-    phys_bridge_create: True
-  vars_files:
-    - global_vars.yaml
-  roles:
-    - nodeSetup
 
+# The next three plays set up our VXLAN network that we will 
+# present to OpenStack Neutron as a physical provider network
+# The network will act as a virtual bridge, the compute nodes
+# will attach to this bridge. Finally, we set up the network node
+# so that it acts as a router between this network and the 
+# actual physical network
 
 - name: Create and wire up br-ext on network node
   hosts: network_nodes
@@ -203,7 +186,10 @@
   roles:
     - placement
 
-
+# 
+# Install the Cinder API server and the Cinder scheduler
+# on the controller node - this is the Cinder "control plane"
+#
 - name: Install Cinder on controller node
   hosts: controller_nodes
   become: yes
@@ -217,14 +203,15 @@
   roles:
     - cinder_server
 
-
+#
+# Install Cinder volume manager on the storage nodes
+#
 - name: Install Cinder on storage nodes
   hosts: storage_nodes
   become: yes
   vars_files:
     global_vars.yaml
   vars:
-    cinder_storage_device: "/dev/sdc"
     cinder_db_user_password: "{{OS_SERVICE_PASSWORD}}"
     cinder_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
     rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
@@ -271,6 +258,10 @@
     - nova_compute
 
 
+#
+# Now make sure that the Nova server knows about our
+# compute nodes
+#
 - name: Discover compute hosts
   hosts: controller_nodes
   become: yes
@@ -280,21 +271,11 @@
       shell:
         nova-manage cell_v2 discover_hosts
 
-# Make sure that all compute hosts have a valid iSCSI initiator name
-- name: Set iSCSI initiator name
-  hosts: compute_nodes
-  become: yes
-  tasks: 
-    - name: Install Open iSCSI
-      apt:
-        update_cache: no
-        force_apt_get: yes 
-        name: open-iscsi
-        state: latest 
-    - name: Run startup script
-      command:
-        /lib/open-iscsi/startup-checks.sh
 
+#
+# Now we install the control plane components of 
+# Neutron on our controller
+#
 - name: Install Neutron on controller nodes
   hosts: controller_nodes
   become: yes
@@ -309,6 +290,10 @@
   roles:
     - neutron_server
 
+#
+#  All agents (DHCP,Metadata) will run on the
+# network node
+#
 - name: Install Neutron agents on network node
   hosts: network_nodes
   become: yes
@@ -331,7 +316,9 @@
   roles:
     - neutron_l3agent
 
-
+#
+# On the compute nodes, we need the OVS agents
+#
 - name: Finalize Neutron configuration on compute nodes
   hosts: compute_nodes
   become: yes
@@ -344,6 +331,9 @@
   roles:
     - neutron_compute
 
+#
+# Install Horizon on the controller node
+#
 - name: Install Horizon
   hosts: controller_nodes
   become: yes

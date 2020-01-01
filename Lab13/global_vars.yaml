@@ -42,4 +42,7 @@ router_public_interface: "enp0s3"
 physical_network_mtus: "physnet:1450"
 # The region that Nova will use to locate the cinder service - setting this will enable cinder
 cinder_os_region_name: "RegionOne"
+# The device on the storage node that Cinder will use as a physical LVM volume
+# WARNING: specifying the wrong device might destroy data!
+cinder_storage_device: "/dev/sdc"
 

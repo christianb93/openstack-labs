@@ -51,7 +51,6 @@
 - name: Create glance service entity
   os_keystone_service:
     auth:
-    auth:
       auth_url: http://{{api_node}}:5000/v3
       username: admin
       os_user_domain_name: "default"

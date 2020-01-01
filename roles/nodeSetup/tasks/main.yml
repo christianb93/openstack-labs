@@ -86,6 +86,23 @@
     force_apt_get: yes
     state: present
 
+# 
+# At least our compute nodes will have to act as
+# iSCSI initiators when we install Cinder. To be on the safe
+# side and to simplify things, we install Open-iSCSI on all nodes
+# and make sure that a valid initiator name is created
+#
+- name: Install Open iSCSI
+  apt:
+    update_cache: no
+    force_apt_get: yes 
+    name: open-iscsi
+    state: latest 
+- name: Run startup check script to create initiator name
+  command:
+    /lib/open-iscsi/startup-checks.sh
+
+
 
 # Network setup
 # * bring up unnumbered VM network device if specified
