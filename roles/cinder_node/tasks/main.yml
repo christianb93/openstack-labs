@@ -13,9 +13,6 @@
     sudo pvscan -s | grep "{{cinder_storage_device}}" | wc -l
   register: 
     pvscan
-- name: output 
-  debug:
-    var: pvscan
 - name: Create physical volume
   shell: |
     pvcreate  {{cinder_storage_device}}

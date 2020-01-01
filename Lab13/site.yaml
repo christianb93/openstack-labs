@@ -280,6 +280,20 @@
       shell:
         nova-manage cell_v2 discover_hosts
 
+# Make sure that all compute hosts have a valid iSCSI initiator name
+- name: Set iSCSI initiator name
+  hosts: compute_nodes
+  become: yes
+  tasks: 
+    - name: Install Open iSCSI
+      apt:
+        update_cache: no
+        force_apt_get: yes 
+        name: open-iscsi
+        state: latest 
+    - name: Run startup script
+      command:
+        /lib/open-iscsi/startup-checks.sh
 
 - name: Install Neutron on controller nodes
   hosts: controller_nodes
