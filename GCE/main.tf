@@ -64,6 +64,13 @@ variable "underlay_network_cidr" {
   default = "192.168.2.0/24"
 }
 
+# The number of compute  nodes that we use
+variable "compute_node_count" {
+  type = number
+  default = 2
+}
+
+
 # IP address of the machine on which Terraform is running
 data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
@@ -264,11 +271,11 @@ resource "google_compute_instance" "network" {
 
 } 
 
-
+# The compute nodes
 resource "google_compute_instance" "compute" {
   name         = "compute${count.index}"
   machine_type = "n1-standard-2"
-  count = 2
+  count = var.compute_node_count
 
   boot_disk {
     initialize_params {
@@ -296,6 +303,39 @@ resource "google_compute_instance" "compute" {
 
 }
 
+# Storage node and associated disk
+resource "google_compute_disk" "lvm_volume" {
+  name          = "lvm-volume"
+  description   = "This is the disk that LVM will use as a physical volume"
+  size          = 20
+}
+resource "google_compute_instance" "storage" {
+  name         = "storage"
+  machine_type = "n1-standard-1"
+  
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-1804-lts"
+    }
+  }
+
+  attached_disk {
+    source        = google_compute_disk.lvm_volume.self_link
+    device_name   = "lvm-volume"
+  }
+
+  # We add a user vagrant with an SSH key
+  metadata = {
+    ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
+  }
+
+  network_interface {
+    # This is the management interface, attached to our management network
+    network       = google_compute_network.management-vpc.self_link
+    subnetwork    = google_compute_subnetwork.management-subnetwork.self_link
+    network_ip    = "192.168.1.31"
+   }
+}
 
 output "inventory" {
   value = concat(
@@ -319,6 +359,17 @@ output "inventory" {
         "ansible_ssh_user" : "vagrant",
         "private_key_file" : "${var.vagrant_private_ssh_key_file}",
         "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" 
+      } ],
+      [ {
+        "groups"           : "['storage_nodes']",
+        "name"             : "${google_compute_instance.storage.name}",
+        "ip"               : "${google_compute_instance.storage.network_interface.0.network_ip }",
+        "mgmt_ip"          : "${google_compute_instance.storage.network_interface.0.network_ip}",
+        "underlay_ip"      : "",
+        "ansible_ssh_user" : "vagrant",
+        "private_key_file" : "${var.vagrant_private_ssh_key_file}",
+        "extra_ssh_config_items"  :  "ProxyJump network",
+        "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o \"ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.vagrant_private_ssh_key_file} -W %h:%p vagrant@${google_compute_instance.network.network_interface.0.access_config.0.nat_ip}\"" 
       } ],
       [ for s in google_compute_instance.compute[*] : {
         # Note that we use the management IP as SSH target IP as we use the network node as the jump host

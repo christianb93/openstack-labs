@@ -1,0 +1,8 @@
+---
+ # Change this to False if you do not have an APT proxy installed
+use_apt_proxy: True
+# If you use a proxy, this needs to be the URL under which the proxy is
+# reachable from within each of the virtual machines (controller, compute node, network node)
+apt_proxy_url:   http://{{hostvars.controller.mgmt_ip}}:3142
+# No physical bridge needed here
+phys_bridge_create: False

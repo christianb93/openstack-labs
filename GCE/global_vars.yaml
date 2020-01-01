@@ -34,6 +34,9 @@ network_vxlan_ranges: "2000:2100"
 service_plugins: "router"
 ovs_bridge_mappings: "physnet:br-phys"
 ovs_tunnel_types: "vxlan"
+# Public interface on the network node to which our iptables configuration will route
+# traffic
+router_public_interface: "ens4"
 # Use the public IP address of the controller node for the VNC proxy URL
 vnc_ip: "{{hostvars.controller.ansible_ssh_host}}"
 # Global MTU on GCE is only 1460 due to GRE encapsulation
@@ -41,3 +44,9 @@ global_mtu: 1460
 # As we realize the network that Neutron sees as physical network as a VXLAN network, we need
 # to tell Neutron about the lower MTU
 physical_network_mtus: "physnet:1410"
+# The region that Nova will use to locate the cinder service - setting this will enable cinder
+cinder_os_region_name: "RegionOne"
+# The device on the storage node that Cinder will use as a physical LVM volume
+# WARNING: specifying the wrong device might destroy data! Make sure that this matches
+# the disk name in main.tf
+cinder_storage_device: "/dev/disk/by-id/google-lvm-volume"

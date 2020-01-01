@@ -27,6 +27,25 @@
       sleep: 10
 
 
+# Set up APT cache on controller node
+- name: Install APT cache on controller
+  hosts: controller_nodes
+  become: yes
+  tasks: 
+  - name: Install apt-cacher-ng 
+    apt:
+      name: apt-cacher-ng
+      force_apt_get: yes 
+      update_cache: yes
+      state: latest
+
+###########################################################################################
+# Now we simply include the actual Lab. Note that we really have to 
+# put the contents of the playbook here, as using import_playbook or
+# include will make Ansible use the group_vars in the lab folder, not the
+# group_vars in this folder
+###########################################################################################
+
 #
 # Create credentials
 #
@@ -36,6 +55,14 @@
     - global_vars.yaml
   roles:
     - prepareCredentials
+
+# Make sure that all hosts are up before proceeding
+- name: Check connectivity
+  hosts: all
+  tasks:
+    - name: Check connectivity
+      ping:
+
 
 
 #
@@ -53,55 +80,27 @@
       include_vars:
         file: "{{credentials_dir}}/credentials.yaml"
 
-
-# Set up APT cache on controller node
-- name: Install APT cache on controller
-  hosts: controller_nodes
-  become: yes
-  tasks: 
-  - name: Install apt-cacher-ng 
-    apt:
-      name: apt-cacher-ng
-      force_apt_get: yes 
-      update_cache: yes
-      state: latest
-
 #
-# Perform basic setup steps on all nodes. This will
-# - distribute credentials
-# - set up networking
-# - make sure that the APT proxy is used
-# - register the Cloud APT repository
-# - install the python3 openstack client
-# We first do this on the controller, as we do NOT want to enable APT caching
-# on the controller itself, then on the other machines
+# Perform basic setup steps on all nodes. Among other things,
+# this will set up the APT configuration, so make sure that the
+# group_vars are reflecting the network setup. Here we also create
+# a physical bridge br-phys if needed 
 #
-- name: Basic node setup (controller)
-  hosts: controller_nodes
+- name: Basic node setup 
+  hosts: all
   become: yes
-  vars:
-    # Do not use the proxy on the controller itself
-    use_apt_proxy: False
-    apt_proxy_url:  http://{{hostvars.controller.mgmt_ip}}:3142
   vars_files:
     - global_vars.yaml
   roles:
     - nodeSetup
 
-- name: Basic node setup (other nodes)
-  hosts: compute_nodes, network_nodes
-  become: yes
-  vars:
-    # Use the APT proxy running on the controller
-    use_apt_proxy: True
-    apt_proxy_url:  http://{{hostvars.controller.mgmt_ip}}:3142
-    # Also create br-phys
-    phys_bridge_create: True
-  vars_files:
-    - global_vars.yaml
-  roles:
-    - nodeSetup
 
+# The next three plays set up our VXLAN network that we will 
+# present to OpenStack Neutron as a physical provider network
+# The network will act as a virtual bridge, the compute nodes
+# will attach to this bridge. Finally, we set up the network node
+# so that it acts as a router between this network and the 
+# actual physical network
 
 - name: Create and wire up br-ext on network node
   hosts: network_nodes
@@ -130,7 +129,7 @@
     vxlan_id: 100
   roles:
     - vxlan_node
-
+     
 
 - name: Establish routing on network node to provide external connectivity for instances 
   hosts: network_nodes
@@ -138,10 +137,10 @@
   vars_files:
     global_vars.yaml
   vars:
-    public_interface: ens4
+    public_interface: "{{router_public_interface}}"
     internal_interface: "{{phys_interface}}"
     internal_ip_address: "172.16.0.1/24"
-    internal_interface_mtu: 1410
+    internal_interface_mtu: 1450
   roles:
     - router
 
@@ -160,10 +159,10 @@
     - ntpServer
 
 #
-# Set up the compute nodes as NTP clients
+# Set up the compute nodes, network nodes and storage nodes as NTP clients
 #
-- name: Install NTP client on compute nodes
-  hosts: compute_nodes
+- name: Install NTP client on other nodes nodes
+  hosts: compute_nodes, network_nodes, storage_nodes
   become: yes
   vars_files:
     global_vars.yaml
@@ -235,6 +234,37 @@
   roles:
     - placement
 
+# 
+# Install the Cinder API server and the Cinder scheduler
+# on the controller node - this is the Cinder "control plane"
+#
+- name: Install Cinder on controller node
+  hosts: controller_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    cinder_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    cinder_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - cinder_server
+
+#
+# Install Cinder volume manager on the storage nodes
+#
+- name: Install Cinder on storage nodes
+  hosts: storage_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    cinder_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    cinder_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - cinder_node
 
 #
 # Install Nova on the controller node
@@ -252,6 +282,7 @@
     nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
     placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
     metadata_shared_secret: "{{OS_SHARED_SECRET}}"
+    cinder_os_region_name: "RegionOne"
   roles:
     - nova
 
@@ -275,6 +306,10 @@
     - nova_compute
 
 
+#
+# Now make sure that the Nova server knows about our
+# compute nodes
+#
 - name: Discover compute hosts
   hosts: controller_nodes
   become: yes
@@ -285,6 +320,10 @@
         nova-manage cell_v2 discover_hosts
 
 
+#
+# Now we install the control plane components of 
+# Neutron on our controller
+#
 - name: Install Neutron on controller nodes
   hosts: controller_nodes
   become: yes
@@ -299,6 +338,10 @@
   roles:
     - neutron_server
 
+#
+#  All agents (DHCP,Metadata) will run on the
+# network node
+#
 - name: Install Neutron agents on network node
   hosts: network_nodes
   become: yes
@@ -321,7 +364,9 @@
   roles:
     - neutron_l3agent
 
-
+#
+# On the compute nodes, we need the OVS agents
+#
 - name: Finalize Neutron configuration on compute nodes
   hosts: compute_nodes
   become: yes
@@ -334,6 +379,9 @@
   roles:
     - neutron_compute
 
+#
+# Install Horizon on the controller node
+#
 - name: Install Horizon
   hosts: controller_nodes
   become: yes
@@ -345,3 +393,8 @@
     horizon_enable_router: True
   roles:
     - horizon
+
+
+
+
+

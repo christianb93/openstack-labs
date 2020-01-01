@@ -1,0 +1,8 @@
+---
+ # Change this to False if you do not have an APT proxy installed
+use_apt_proxy: False
+# If you use a proxy, this needs to be the URL under which the proxy is
+# reachable from within each of the virtual machines (controller, compute node, network node)
+apt_proxy_url:  
+# Do not create a physical bridge on this node
+phys_bridge_create: False

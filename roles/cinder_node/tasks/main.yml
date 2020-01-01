@@ -9,15 +9,19 @@
     - lvm2
     - tgt
 - name: Check whether physical volume already exists
+  # This is not yet fully safe, as it only checks that SOME 
+  # physical volume has been created. However, pvcreate will not allow us
+  # to create a physical volume again already in use, so this should work in most
+  # cases
   shell: 
-    sudo pvscan -s | grep "{{cinder_storage_device}}" | wc -l
+    sudo pvscan -s | wc -l
   register: 
     pvscan
 - name: Create physical volume
   shell: |
     pvcreate  {{cinder_storage_device}}
   when: 
-    pvscan.stdout == "0"
+    pvscan.stdout == "1"
 - name: Check whether volume group already exists
   shell: 
     sudo vgscan  | grep "cinder-volumes" | wc -l
