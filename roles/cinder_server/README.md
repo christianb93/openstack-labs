@@ -5,7 +5,10 @@ This role installs the Cinder control plane (Cinder API, Cinder scheduler) on a 
 
 * set the DB connection string
 * the URL for the connection to RabbitMQ
-
+* remove the configuration items iscsi-helper, volume_name_template, volume_group from the default section as they are apparently not used anymore (and reappear in the lvm section) or have reasonable defaults
+* add connection information for the database and the RabbitMQ infrastructure
+* provide the data required for the Keystone authtoken plugin
+* set the IP address of the host to the IP address of the management interface
 
 
 

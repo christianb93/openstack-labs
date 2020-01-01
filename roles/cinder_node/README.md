@@ -5,6 +5,10 @@ This role installs the Cinder volume manager on a storage node
 
 
 * remove the configuration items iscsi-helper, volume_name_template, volume_group from the default section as they are apparently not used anymore (and reappear in the lvm section) or have reasonable defaults
+* add connection information for the database and the RabbitMQ infrastructure
+* provide the data required for the Keystone authtoken plugin
+* add a section lvm with the volume driver, the name of the LVM volume group to use, the target protocol and the target helper
+* in this section, set the target_ip_address to the IP address of the management interface 
 
 
 
