@@ -641,7 +641,9 @@ state_path = /var/lib/nova
 # host rebooted. It ensures that all of the instances on a Nova compute node
 # resume their state each time the compute node boots or restarts.
 #  (boolean value)
-#resume_guests_state_on_host_boot = false
+# <!--- CHANGED 
+resume_guests_state_on_host_boot = true 
+# CHANGED --->
 
 #
 # Number of times to retry network allocation. It is required to attempt network

@@ -14,7 +14,7 @@ This role installs the nova service on a node. The following configuration are d
 * in the neutron section, we provide connection and authorization settings for the neutron service and the metadata proxy service, including a shared secret
 * in the oslo_concurrency section, we define a path which is used for lock files
 * in the placement section, we define the information that Nova needs to authenticate against the placement service
-
+* finally, we set resume_guests_state_on_host_boot to true to allow Nova to restart instances on a reboot
 
 Requirements
 ------------

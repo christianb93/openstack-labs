@@ -125,7 +125,14 @@
     state: present
     path: /etc/network/interfaces
   when: vm_network_device != ""
-
+- name: Make sure that openvswitch services are running (workaround for sporadic errors)
+  service:
+    name: "{{item}}"
+    state: started
+  loop:
+    - ovsdb-server
+    - ovs-vswitchd
+    - openvswitch-switch
 - name: Create OVS bridge br-phys
   openvswitch_bridge:
     bridge: "{{phys_bridge_name}}"
