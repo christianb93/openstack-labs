@@ -80,7 +80,9 @@ Vagrant.configure("2") do |config|
       # We use port 2 of the existing SCSI controller as adding an SATA controller will 
       # cause issues with the boot order
       # This disk will be visible as /dev/sdc inside the machine
-      v.customize ["createhd", "disk", "--filename", "./vhd.img", "--size", 10 * 1024]
+      unless File.exist?('./vhd.img')
+        vb.customize ['createhd', 'disk', '--filename', './vhd.img',  '--size', 5 * 1024]
+      end
       v.customize ["storageattach", :id, "--storagectl", "SCSI", "--port", 2, "--device", 0, "--type", "hdd", "--medium", "./vhd.img"]    
       v.customize ["modifyvm", :id, "--ioapic", "on"]
       v.customize ["modifyvm", :id, "--nictype2", "virtio"]
