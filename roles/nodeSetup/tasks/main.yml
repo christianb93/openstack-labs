@@ -106,14 +106,25 @@
 
 # Network setup
 # * bring up unnumbered VM network device if specified
-# * enable name resolution
 # * create and wire up physical bridge if specified
 #
 - name: Bring up VM network device
   shell:
     ip link set {{vm_network_device}} up
   when: vm_network_device != ""
-
+- name: Make configuration persistent
+  template:
+    src: 90-openstack.j2
+    dest: /etc/network/interfaces.d/90-openstack
+    mode: 0644
+    owner: root
+  when: vm_network_device != ""
+- name: Make sure that file is sourced in /etc/network/interfaces
+  lineinfile:
+    line: "source /etc/network/interfaces.d/90-openstack"
+    state: present
+    path: /etc/network/interfaces
+  when: vm_network_device != ""
 
 - name: Create OVS bridge br-phys
   openvswitch_bridge:
