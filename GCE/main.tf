@@ -192,6 +192,30 @@ resource "google_compute_firewall" "underlay-firewall" {
 
 
 ###############################################################################
+# The image. To make nested virtualization work, we need an image with a 
+# specific license. To create the image, we need a disk (which we could actually
+# delete again once the image exists)
+# see https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances
+###############################################################################
+
+resource "google_compute_disk" "dummy_disk" {
+  name  = "dummy-disk"
+  image = "ubuntu-os-cloud/ubuntu-1804-lts"
+}
+
+resource "google_compute_image" "ubuntu_bionic_nested_virtualization" {
+  name = "my-ubuntu-image"
+  source_disk = google_compute_disk.dummy_disk.self_link
+  # We need to specify both licenses, otherwise the image will be recreated when we run
+  # Terraform again, and this will force re-creation of all instances
+  licenses = [
+    "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/licenses/ubuntu-1804-lts",
+    "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx",
+  ]
+}
+
+
+###############################################################################
 # Instances
 ###############################################################################
 
@@ -202,7 +226,7 @@ resource "google_compute_instance" "controller" {
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-1804-lts"
+      image = google_compute_image.ubuntu_bionic_nested_virtualization.self_link
     }
   }
   # We add a user vagrant with an SSH key
@@ -237,7 +261,7 @@ resource "google_compute_instance" "network" {
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-1804-lts"
+      image = google_compute_image.ubuntu_bionic_nested_virtualization.self_link
     }
   }
   # We add a user vagrant with an SSH key
@@ -279,7 +303,7 @@ resource "google_compute_instance" "compute" {
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-1804-lts"
+      image = google_compute_image.ubuntu_bionic_nested_virtualization.self_link
     }
   }
   # We add a user vagrant with an SSH key
@@ -315,7 +339,7 @@ resource "google_compute_instance" "storage" {
   
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-1804-lts"
+      image = google_compute_image.ubuntu_bionic_nested_virtualization.self_link
     }
   }
 

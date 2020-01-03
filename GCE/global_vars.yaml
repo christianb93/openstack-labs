@@ -50,3 +50,6 @@ cinder_os_region_name: "RegionOne"
 # WARNING: specifying the wrong device might destroy data! Make sure that this matches
 # the disk name in main.tf
 cinder_storage_device: "/dev/disk/by-id/google-lvm-volume"
+# We have a setup which allows for nested virtualization
+virt_type:  "kvm"
+
