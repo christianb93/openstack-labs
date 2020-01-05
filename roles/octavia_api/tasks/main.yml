@@ -1,0 +1,103 @@
+---
+- name: Create octavia database
+  mysql_db:
+    login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
+    name: octavia
+    state: present
+- name: Create octavia user with necessary grants
+  mysql_user:
+    login_host: "{{db_node}}"
+    login_user: "root"
+    login_password: "{{mariadb_root_password}}"
+    name: octavia
+    password: "{{octavia_db_user_password}}"
+    priv: 'octavia.*:ALL'
+    state: present
+    host: "{{item}}"
+  loop:
+    - localhost
+    - "%"
+- name: Create octavia user in keystone
+  os_user:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    description: "Octavia user"
+    name: "octavia"
+    domain: "default"
+    password: "{{octavia_keystone_user_password}}"
+    state: present
+- name: Assign admin role to newly created octavia user
+  os_user_role:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    project: service
+    user: octavia
+    role: admin
+    state: present
+- name: Create octavia service entity
+  os_keystone_service:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    name: octavia
+    service_type: load-balancer
+    state: present
+- name: Create endpoints
+  os_keystone_endpoint:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{keystone_admin_password}}"
+    auth_type: password
+    endpoint_interface: "{{item}}"
+    service: octavia
+    region: RegionOne
+    url: "http://{{api_node}}:8778"
+    state: present
+  loop:
+    - public
+    - internal
+    - admin
+- name: Install Octavia API package
+  apt:
+    force_apt_get: yes
+    update_cache: yes
+    name: octavia-api
+    state: latest
+- name: Create Octavia configuration file for API server
+  template:
+    src: "octavia.conf.j2"
+    dest: /etc/octavia/octavia.conf
+    owner: root
+    group: octavia
+    force: yes
+    mode: 0644  
+- name: Populate database 
+  shell:
+    octavia-db-manage --config-file /etc/octavia/octavia.conf upgrade head
+- name: Restart Octavia API service 
+  service:
+    name: octavia-api
+    state: restarted 
