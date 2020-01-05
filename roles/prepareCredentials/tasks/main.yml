@@ -6,6 +6,14 @@
   file:
     path: "{{credentials_dir}}"
     state: directory
+- name: Make sure that CA and client  subdirectories exist
+  file:
+    path: "{{credentials_dir}}/{{item}}"
+    state: directory
+  loop:
+    - install_ca 
+    - octavia_ca 
+    - client_cert
 - name: Check if credentials.yaml exists
   stat:
     path: "{{credentials_dir}}/credentials.yaml"
@@ -45,3 +53,56 @@
     size: 2048
     type: rsa
     state: present
+
+# Create an RSA key for our CAs
+- name: Generate an OpenSSL key for each CA and one for the client
+  openssl_privatekey:
+    path: "{{credentials_dir}}/{{item}}"
+    size: 2048
+  loop:
+    - install_ca/install_ca.rsa 
+    - octavia_ca/octavia_ca.rsa
+    - client_cert/client_cert.rsa
+- name: Generate  CA certificate signing requests
+  openssl_csr:
+    path: "{{credentials_dir}}/{{item}}/{{item}}.csr"    
+    privatekey_path: "{{credentials_dir}}/{{item}}/{{item}}.rsa"
+    common_name: "{{item}}"
+    basic_constraints: "CA:TRUE"
+    basic_constraints_critical: true
+    useCommonNameForSAN: false
+  loop:
+    - octavia_ca
+    - install_ca
+- name: Generate self-signed CA certificates from these requests
+  openssl_certificate:
+    path: "{{credentials_dir}}/{{item}}/{{item}}.crt"    
+    privatekey_path: "{{credentials_dir}}/{{item}}/{{item}}.rsa"
+    csr_path: "{{credentials_dir}}/{{item}}/{{item}}.csr"
+    provider: selfsigned
+  loop:
+    - octavia_ca
+    - install_ca
+- name: Create a CSR for the client certificate 
+  openssl_csr:
+    path: "{{credentials_dir}}/client_cert/client_cert.csr"    
+    privatekey_path: "{{credentials_dir}}/client_cert/client_cert.rsa"
+    common_name: "client_cert"
+    basic_constraints: "CA:FALSE"
+    basic_constraints_critical: true
+    extended_key_usage: "clientAuth"
+    key_usage: 
+      - digitalSignature
+      - keyEncipherment
+    useCommonNameForSAN: false
+- name: Create a client certificate from this CSR, signed with the install_ca
+  openssl_certificate:
+    path: "{{credentials_dir}}/client_cert/client_cert.crt"    
+    csr_path: "{{credentials_dir}}/client_cert/client_cert.csr"
+    provider: ownca
+    ownca_path: "{{credentials_dir}}/install_ca/install_ca.crt"
+    ownca_privatekey_path: "{{credentials_dir}}/install_ca/install_ca.rsa"
+- name: Combine client certificate and key in one PEM file 
+  shell: |
+    cat {{credentials_dir}}/client_cert/client_cert.rsa  > {{credentials_dir}}/client_cert/client_cert.pem
+    cat {{credentials_dir}}/client_cert/client_cert.crt >> {{credentials_dir}}/client_cert/client_cert.pem
