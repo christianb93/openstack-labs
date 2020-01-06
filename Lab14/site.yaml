@@ -362,3 +362,19 @@
     rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - octavia_api
+
+#
+# Install Octavia control plane
+#
+
+- name: Install Octavia control plane 
+  hosts: network_nodes
+  become: yes
+  vars_files:
+    global_vars.yaml
+  vars:
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    octavia_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+  roles:
+    - octavia_controlplane
+  

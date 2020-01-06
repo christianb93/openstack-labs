@@ -1,3 +1,283 @@
 ---
+# We first need to install the packages, as this will also create the
+# group octavia that we need 
+- name: Install packages
+  apt:
+    force_apt_get: yes
+    update_cache: yes 
+    name: "{{item}}"
+    state: latest 
+  loop:
+    - octavia-health-manager 
+    - octavia-housekeeping 
+    - octavia-worker
+- name: Create directory for certificates and keys
+  file:
+    path: "/etc/octavia/{{item}}"
+    state: directory
+    group: octavia
+    owner: root
+    mode: 0750
+  loop:
+    - certs 
+    - keys
+- name: Distribute CA certificates 
+  copy:
+    dest: "/etc/octavia/certs/{{item}}.crt"
+    src: "{{credentials_dir}}/{{item}}/{{item}}.crt"
+    owner: root
+    group: octavia
+    mode: 0750
+  loop:
+    - install_ca
+    - octavia_ca
+- name: Distribute CA private keys 
+  copy:
+    dest: "/etc/octavia/keys/{{item}}.rsa"
+    src: "{{credentials_dir}}/{{item}}/{{item}}.rsa"
+    owner: root
+    group: octavia
+    mode: 0750
+  loop:
+    - install_ca
+    - octavia_ca
+- name: Distribute client PEM file
+  copy:
+    dest: "/etc/octavia/certs/client_cert.pem"
+    src: "{{credentials_dir}}/client_cert/client_cert.pem"
+    owner: root
+    group: octavia
+    mode: 0750
+  loop:
+  - install_ca
+  - octavia_ca
+
+# Create flavor for the amphorae
+- name: Create flavor for amphorae
+  os_nova_flavor:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    state: present
+    name: amphora
+    is_public: no 
+    ram: 1024
+    vcpus: 1
+    disk: 2
+  register:
+    amphora_flavor
+- name: Extract flavor ID for later use 
+  set_fact:
+    amphora_flavor_id: "{{amphora_flavor.flavor.id}}"
+
+#
+#
+#
+- name: Create security group for the load balancer network 
+  os_security_group:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    state: present
+    name: lb_network_security_group
+    description: security group for Octavia load balancer network
+  register:
+    octavia_security_group
+- name: Remember UUID of security group for later use 
+  set_fact:
+    lb_network_security_group_id: "{{octavia_security_group.id}}"
+- name: Allow ICMP traffic for this security group
+  os_security_group_rule:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    protocol: icmp
+    remote_ip_prefix: "0.0.0.0/0"
+    security_group: lb_network_security_group
+    state: present
+- name: Allow SSH traffic
+  os_security_group_rule:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    protocol: tcp
+    port_range_max: 22
+    port_range_min: 22
+    remote_ip_prefix: "0.0.0.0/0"
+    security_group: lb_network_security_group
+    state: present
+- name: Allow traffic on amphora REST agent port
+  os_security_group_rule:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    protocol: tcp
+    port_range_max: 9443
+    port_range_min: 9443
+    remote_ip_prefix: "0.0.0.0/0"
+    security_group: lb_network_security_group
+    state: present
+
+
+- name: Create security group for the Octavia health manager 
+  os_security_group:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    state: present
+    name: lb_health_manager_security_group
+    description: security group for Octavia health manager 
   
-  
+- name: Allow traffic on health message port
+  os_security_group_rule:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    protocol: udp
+    port_range_max: 5555
+    port_range_min: 5555
+    remote_ip_prefix: "0.0.0.0/0"
+    security_group: lb_health_manager_security_group
+    state: present    
+
+
+- name: Create load balancer network 
+  os_network:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    external: no
+    name: octavia-lb-network
+    shared: false
+    state: present
+  register:
+    octavia_load_balancer_network 
+- name: Remember network ID for later use 
+  set_fact:
+    lb_network_uuid: "{{octavia_load_balancer_network.id}}"
+- name: Create subnet on load balancer network
+  os_subnet:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    enable_dhcp: yes
+    gateway_ip: 172.20.0.1
+    cidr: 172.20.0.0/24
+    network_name: octavia-lb-network
+    name: octavia-lb-subnet
+    state: present
+    allocation_pool_start: 172.20.0.10
+    allocation_pool_end:  172.20.0.100
+
+- name: Create a port on the load balancer network 
+  os_port:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    state: present 
+    device_owner: "octavia"
+    security_groups: "lb_health_manager_security_group"
+    name: "lb_network_access_port"
+    network: "octavia-lb-network"
+  register:
+    octavia_access_port
+- name: check
+  debug:
+    var: octavia_access_port
+- name: Remember IP and MAC of access port for later use 
+  set_fact:
+    lb_network_mgmt_ip: "{{octavia_access_port.port.fixed_ips[0].ip_address}}"
+    lb_network_mgmt_mac: "{{octavia_access_port.port.mac_address}}"
+- name: Create helper script on network node 
+  template:
+    src: "get_vlan_id.sh.j2"
+    dest: "{{install_user_home}}/get_vlan_id.sh"
+    owner: "{{install_user}}"
+    group: "{{install_user}}"
+    force: yes
+    mode: 0700
+- name: Run script to determine local VLAN ID of our load balancer network
+  shell: 
+    "{{install_user_home}}/get_vlan_id.sh"
+  register: 
+    tag
+- name: Remember value for later use 
+  set_fact:
+    local_vlan_id: "{{tag.stdout}}"
+- name: test 
+  debug:
+    var: local_vlan_id
+- name: Create OVS access port for this local VLAN ID on integration bridge 
+  openvswitch_port:
+    bridge: br-int
+    port: lb_port
+    state: present
+    tag: "{{local_vlan_id}}"
+    set: "interface lb_port type=internal"
+- name: Bring up the port and assign IP address 
+  shell: |
+    ip addr add dev lb_port {{lb_network_mgmt_ip}}/24
+    ip link set dev lb_port up
+
+- name: Load public key for amphora access 
+  os_keypair:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    name: amphora-key
+    public_key_file: "{{install_user_home}}/amphora-key.pub"

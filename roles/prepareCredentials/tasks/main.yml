@@ -6,7 +6,7 @@
   file:
     path: "{{credentials_dir}}"
     state: directory
-- name: Make sure that CA and client  subdirectories exist
+- name: Make sure that CA and client subdirectories exist
   file:
     path: "{{credentials_dir}}/{{item}}"
     state: directory
@@ -14,6 +14,7 @@
     - install_ca 
     - octavia_ca 
     - client_cert
+    - keys
 - name: Check if credentials.yaml exists
   stat:
     path: "{{credentials_dir}}/credentials.yaml"
@@ -46,7 +47,7 @@
   when: credentials_yaml.stat.exists == False
 
 # Now we create an SSH key pair and place it in the
-# playbook directory
+# credentials directory
 - name: Create key pair locally
   openssh_keypair:
     path: "{{credentials_dir}}/{{ssh_key_name}}"
@@ -106,3 +107,9 @@
   shell: |
     cat {{credentials_dir}}/client_cert/client_cert.rsa  > {{credentials_dir}}/client_cert/client_cert.pem
     cat {{credentials_dir}}/client_cert/client_cert.crt >> {{credentials_dir}}/client_cert/client_cert.pem
+- name: Create SSH key pair for the Octavia amphorae
+  openssh_keypair:
+    path: "{{credentials_dir}}/keys/amphora-key"
+    size: 2048
+    type: rsa
+    state: present

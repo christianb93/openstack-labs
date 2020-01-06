@@ -19,21 +19,34 @@
     force: yes
     mode: 0700
     src: "demo_openrc.j2"
-- name: Distribute private key
+- name: Create octavia-openrc
+  template:
+    dest: "{{install_user_home}}/octavia-openrc"
+    owner: "{{install_user}}"
+    group: "{{install_user}}"
+    force: yes
+    mode: 0700
+    src: "octavia_openrc.j2"
+- name: Distribute public and private key
   copy:
-    src: "{{credentials_dir}}/demo-key"
-    dest: "{{install_user_home}}/demo-key"
+    src: "{{credentials_dir}}/{{item}}"
+    dest: "{{install_user_home}}/{{item}}"
     owner: "{{install_user}}"
     group: "{{install_user}}"
     mode: 0700
-- name: Distribute public key
+  loop: 
+    - demo-key
+    - demo-key.pub 
+- name: Distribute public and private key for amphorae
   copy:
-    src: "{{credentials_dir}}/demo-key.pub"
-    dest: "{{install_user_home}}/demo-key.pub"
+    src: "{{credentials_dir}}/keys/{{item}}"
+    dest: "{{install_user_home}}/{{item}}"
     owner: "{{install_user}}"
     group: "{{install_user}}"
     mode: 0700
-
+  loop:
+    - amphora-key 
+    - amphora-key.pub
 # 
 # Set up name resolution
 #

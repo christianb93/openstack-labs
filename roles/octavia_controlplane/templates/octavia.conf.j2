@@ -226,7 +226,7 @@ transport_url = rabbit://openstack:{{rabbitmq_password}}@{{mq_node}}
 
 # The host IP to bind to (IP address value)
 # <!--- CHANGED 
-#bind_host = {{mgmt_ip}}
+bind_host = {{mgmt_ip}}
 # CHANGED --->
 
 # The port to bind to (port value)
@@ -348,7 +348,7 @@ ca_certificate = /etc/octavia/certs/octavia_ca.crt
 # CHANGED ---> 
 # Absolute path to the Private Key for signing. Defaults to env[OS_OCTAVIA_TLS_CA_KEY]. (string value)
 # <!--- CHANGED 
-ca_private_key = /etc/octavia/certs/octavia_ca.rsa
+ca_private_key = /etc/octavia/keys/octavia_ca.rsa
 # CHANGED ---> 
 
 # Passphrase for the Private Key. Defaults to env[OS_OCTAVIA_CA_KEY_PASS] or None. (string value)
@@ -380,11 +380,15 @@ server_certs_key_passphrase = {{OS_ADMIN_PASSWORD}}
 #amp_active_wait_sec = 10
 
 # Nova instance flavor id for the Amphora (string value)
-#amp_flavor_id =
+<! --- CHANGED 
+amp_flavor_id = {{amphora_flavor_id}}
+# CHANGED --->
 
 # Glance image tag for the Amphora image to boot. Use this option to be able to update the image without reconfiguring Octavia. Ignored if
 # amp_image_id is defined. (string value)
-#amp_image_tag =
+# <!--- CHANGED 
+amp_image_tag = amphora
+# CHANGED --->
 
 # DEPRECATED: Glance image id for the Amphora image to boot (string value)
 # This option is deprecated for removal.
@@ -393,10 +397,14 @@ server_certs_key_passphrase = {{OS_ADMIN_PASSWORD}}
 #amp_image_id =
 
 # Restrict glance image selection to a specific owner ID.  This is a recommended security setting. (string value)
-#amp_image_owner_id =
+#<!--- CHANGED 
+amp_image_owner_id = {{octavia_user_id}}
+# CHANGED --->
 
 # Optional SSH keypair name, in nova, that will be used for the authorized_keys inside the amphora. (string value)
-#amp_ssh_key_name =
+#<!--- CHANGED 
+amp_ssh_key_name = amphora-key
+# CHANGED --->
 
 # DEPRECATED: Determines whether or not to allow access to the Amphorae (boolean value)
 # This option is deprecated for removal.
@@ -406,10 +414,14 @@ server_certs_key_passphrase = {{OS_ADMIN_PASSWORD}}
 #amp_ssh_access_allowed = true
 
 # List of networks to attach to the Amphorae. All networks defined in the list will be attached to each amphora. (list value)
-#amp_boot_network_list =
+# <!--- CHANGED 
+amp_boot_network_list = {{lb_network_uuid}}
+# CHANGED --->
 
 # List of security groups to attach to the Amphora. (list value)
-#amp_secgroup_list =
+#<!--- CHANGED 
+amp_secgroup_list = {{lb_network_security_group_id}}
+# CHANGED --->
 
 # Client CA for the amphora agent to use (string value)
 #<!--- CHANGED 
@@ -417,13 +429,19 @@ client_ca = /etc/octavia/certs/install_ca.crt
 # CHANGED --->
 
 # Name of the amphora driver to use (string value)
-#amphora_driver = amphora_noop_driver
+#<!--- CHANGED 
+amphora_driver = amphora_haproxy_rest_driver
+# CHANGED --->
 
 # Name of the compute driver to use (string value)
-#compute_driver = compute_noop_driver
+#<!--- CHANGED 
+compute_driver = compute_nova_driver
+# CHANGED --->
 
 # Name of the network driver to use (string value)
-#network_driver = network_noop_driver
+#<!--- CHANGED 
+network_driver = allowed_address_pairs_driver
+# CHANGED --->
 
 # Name of the distributor driver to use (string value)
 #distributor_driver = distributor_noop_driver
@@ -581,13 +599,16 @@ connection = mysql+pymysql://octavia:{{octavia_db_user_password}}@{{db_node}}/oc
 #
 
 # The name of the glance service in the keystone catalog (string value)
-#service_name = <None>
-
+#<!--- CHANGED
+service_name = glance
+# CHANGED --->
 # A new endpoint to override the endpoint in the keystone catalog. (string value)
 #endpoint = <None>
 
 # Region in Identity service catalog to use for communication with the OpenStack services. (string value)
-#region_name = <None>
+#<!--- CHANGED
+region_name = RegionOne
+# CHANGED --->
 
 # Endpoint interface in identity service to use (string value)
 #endpoint_type = publicURL
@@ -642,7 +663,9 @@ connection = mysql+pymysql://octavia:{{octavia_db_user_password}}@{{db_node}}/oc
 #haproxy_stick_size = 10k
 
 # The host IP to bind to (IP address value)
-#bind_host = ::
+#<!--- CHANGED 
+bind_host = 0.0.0.0
+# CHANGED --->
 
 # The port to bind to (port value)
 # Minimum value: 0
@@ -703,7 +726,9 @@ server_ca = /etc/octavia/certs/octavia_ca.crt
 #
 
 # IP address the controller will listen on for heart beats (IP address value)
-#bind_ip = 127.0.0.1
+#<!--- CHANGED 
+bind_ip = {{lb_network_mgmt_ip}}
+# CHANGED --->
 
 # Port number the controller will listen on for heart beats (port value)
 # Minimum value: 0
@@ -727,8 +752,9 @@ server_ca = /etc/octavia/certs/octavia_ca.crt
 
 # key used to validate amphora sending the message (string value)
 # Note: This option can be changed without restarting.
-#heartbeat_key = <None>
-
+<!--- CHANGED 
+heartbeat_key = {{OS_ADMIN_PASSWORD
+# CHANGED --->
 # Interval, in seconds, to wait before failing over an amphora. (integer value)
 #heartbeat_timeout = 60
 
@@ -740,7 +766,9 @@ server_ca = /etc/octavia/certs/octavia_ca.crt
 
 # List of controller ip and port pairs for the heartbeat receivers. Example 127.0.0.1:5555, 192.168.0.1:5555 (list value)
 # Note: This option can be changed without restarting.
-#controller_ip_port_list =
+#<!--- CHANGED 
+controller_ip_port_list = {{lb_network_mgmt_ip}}:5555
+# CHANGED--->
 
 # Sleep time between sending heartbeats. (integer value)
 # Note: This option can be changed without restarting.
@@ -1002,13 +1030,17 @@ password = {{octavia_keystone_user_password}}
 #
 
 # The name of the neutron service in the keystone catalog (string value)
-#service_name = <None>
+#<!--- CHANGED 
+service_name = neutron 
+# CHANGED --->
 
 # A new endpoint to override the endpoint in the keystone catalog. (string value)
 #endpoint = <None>
 
 # Region in Identity service catalog to use for communication with the OpenStack services. (string value)
-#region_name = <None>
+#<!--- CHANGED 
+region_name = RegionOne 
+# CHANGED --->
 
 # Endpoint interface in identity service to use (string value)
 #endpoint_type = publicURL
@@ -1027,13 +1059,17 @@ password = {{octavia_keystone_user_password}}
 #
 
 # The name of the nova service in the keystone catalog (string value)
-#service_name = <None>
+#<!--- CHANGED 
+service_name = nova
+# CHANGED --->
 
 # A new endpoint to override the endpoint in the keystone catalog. (string value)
 #endpoint = <None>
 
 # Region in Identity service catalog to use for communication with the OpenStack services. (string value)
-#region_name = <None>
+#<!--- CHANGED 
+region_name = RegionOne 
+# CHANGED --->
 
 # Endpoint interface in identity service to use (string value)
 #endpoint_type = publicURL

@@ -34,6 +34,11 @@
     domain: "default"
     password: "{{octavia_keystone_user_password}}"
     state: present
+  register:
+    octavia_user
+- name: Remember user ID for later use 
+  set_fact:
+    octavia_user_id: "{{octavia_user.user.id}}"
 - name: Assign admin role to newly created octavia user
   os_user_role:
     auth:

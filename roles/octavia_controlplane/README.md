@@ -27,7 +27,13 @@ Thus we have the following table that summarizes the various certificates and ke
 | Certificate generator | root CA | octavia_ca |
 | Certificate generator | private key | octavia_key |
 
-We will create these certificates on the local host and distribute them, on the Octavia nodes, they will be kept in */etc/octavia/certs/*. 
+We will create these certificates on the local host and distribute them, on the Octavia nodes, they will be kept in */etc/octavia/certs/*. This is done by the role prepareCredentials which should be run BEFORE this role executes. 
+
+## Network setup
+
+The Octavia Amphorae communicate with the control plane via a dedicated virtual (!) network called the **load balancer network**. This can be any type of virtual network that Neutron offers, but 
+
+## Flavor and image
 
 
 ## Configuration file changes
@@ -48,6 +54,20 @@ Additional changes:
 
 * set the *cert_manager* so that the local cert manager is used (and we do not need Barbican)
 * set all certificates according to the table above
+* set the *amp_ssh_key_name* to amphora-key, this is the name of the key Nova will place on each newly created amphora
+* set the *amp_flavor_id* to the ID of the flavor that we have created for the amphora image
+* set the *amp_image_tag* to the tag that we use to identify an image ("amphora"), and set the *amp_image_owner_id* to the id of the octavia keystone user
+* set the *amp_boot_network_list* to the UUID of the load balancer network that we have created. When an amphora instance is [created](https://github.com/openstack/octavia/blob/9904b26a9c40f29f554c56e9e65f6396caa8fea9/octavia/compute/drivers/nova_driver.py#L147), this list is [retrieved](https://github.com/openstack/octavia/blob/9904b26a9c40f29f554c56e9e65f6396caa8fea9/octavia/controller/worker/tasks/compute_tasks.py#L60) from the configuration and the instance is attached to each network contained in it, and when I interpret [this piece of code](https://github.com/openstack/octavia/blob/9904b26a9c40f29f554c56e9e65f6396caa8fea9/octavia/compute/drivers/nova_driver.py#L231) correctly, then the first network in this list is considered to be "the" load balancer network from Octavias point of view. 
+* populate *amp_secgroup_list* to apply the load balancer network security group to the amphorae
+* set the *amphora_driver* to the amphora_haproxy_rest_driver (the standard REST driver coming with Octavia)
+* modify *compute_driver* so that the Nova driver is used. 
+* modify *network_driver* to use the allowed address pairs driver
+* remark: we do not change the default (noop driver) for the volume driver, so that Octavia will boot the instances from the disk image
+* in the glance section, we point Octavia to the Glance service in our only region (RegionOne)
+* in the haproxy_amphora section, we set the bind host to 0.0.0.0, this is the IP address to which the agent will bind on the amphora
+* in the health_manager section, we need to change the item *bind_ip* which determines on which IP address the health manager will listen on our control plane node to pick up heartbeats from the amphorae, this needs to be an IP address within the load balancer network. We also change *controller_ip_port_list* to match this IP address, as this is the configuration item that the agent on the amphora will look up to determine to which addresses it should send heartbeats (this could be more than one health manager in a HA setup)
+* we set the item *heartbeat_key* which is a key used to verify heart beats received from the amphorae
+* in the neutron and nova sections, we make the same changes as in the glance section
 
 Requirements
 ------------
@@ -73,7 +93,7 @@ The following variables need to be set when calling this role.
 Dependencies
 ------------
 
-None
+We use some of the files prepared by the role prepareCredentials
 
 
 License

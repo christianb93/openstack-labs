@@ -1,0 +1,20 @@
+#!/bin/bash 
+# Get credentials
+source {{install_user_home}}/octavia-openrc
+# Get ID of network and determine namespace
+id=$(openstack network show  -c id -f value octavia-lb-network )
+ns_id="qdhcp-$id"
+# Wait until namespace for DHCP agent has been created  
+found=$(sudo ip netns list | grep "$ns_id" | wc -l)
+while [ "$found" == "0" ]; do
+  sleep 1 
+done
+# Now get ID of corresponding port 
+port_id=$(openstack port list --network octavia-lb-network --device-owner network:dhcp -c id -f value)
+short_port_id=${port_id:0:11}
+ovs_port_id="tap$short_port_id"
+# Get record for this port (columns name, other_config) from the OVS DB
+record=$(sudo ovsdb-client dump  unix:/var/run/openvswitch/db.sock Open_vSwitch Port name tag | grep $ovs_port_id)
+# Extract tag 
+tag=$(echo $record | awk '{print $2'})
+echo $tag
