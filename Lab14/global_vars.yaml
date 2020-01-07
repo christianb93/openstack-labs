@@ -48,3 +48,7 @@ cinder_storage_device: "/dev/sdc"
 # URL of the amphora image. This can either be a file location (file://) or a http
 # link
 amphora_image_url: "file:///vagrant/amphora-x64-haproxy.qcow2"
+# For the load balancer network, we attach a port to the integration bridge on the network node
+# this is the MTU of the underlying device. Set this to the network MTU minus 50 as the load
+# balancer network is a VXLAN network
+lb_port_mtu: 1450

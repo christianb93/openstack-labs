@@ -31,9 +31,12 @@ We will create these certificates on the local host and distribute them, on the 
 
 ## Network setup
 
-The Octavia Amphorae communicate with the control plane via a dedicated virtual (!) network called the **load balancer network**. This can be any type of virtual network that Neutron offers, but 
+The Octavia Amphorae communicate with the control plane via a dedicated virtual (!) network called the **load balancer network**. This can be any type of virtual network that Neutron offers, but we will use a VXLAN network. As this network needs to be reachable from the control plane, we run the controller on the network node and attach an OVS port to the integration bridge. 
 
-## Flavor and image
+As the traffic on the integration bridge is tagged with the local VLAN ID of the virtual network, this needs to be an access port, and we need to figure out the local VLAN ID corresponding to the load balancer network. This can be done by locating the port of the DHCP agent that Neutron creates for our network.
+
+Note that this only works because this agent is running on the same node. Thus in a setup with more than one network node, this is not the best possible solution, and we would probably realize the load balancer network as a Neutron flat network, supported by OVS bridges managed outside of OpenStack which are connected via GRE or VXLAN, as we do it for the br-ext bridges.
+
 
 
 ## Configuration file changes
@@ -91,6 +94,7 @@ The following variables need to be set when calling this role.
 * mq_node - the node on which RabbitMQ is running
 * rabbitmq_password - password of the RabbitMQ user
 * amphora_image_url - URL of the Amphora image to use
+* lb_port_mtu - the MTU to use for the port that we create to access the load balancer network
 
 Dependencies
 ------------

@@ -262,7 +262,36 @@
 - name: Bring up the port and assign IP address 
   shell: |
     ip addr add dev lb_port {{lb_network_mgmt_ip}}/24
+    lp link set dev lb_port mtu {{lb_port_mtu}}
     ip link set dev lb_port up
+
+- name: Make this configuration persistent 
+  template:
+    src: 92-openstack.j2
+    dest: /etc/network/interfaces.d/92-openstack
+    mode: 0644
+    owner: root
+- name: Source configuration in /etc/network/interfaces
+  lineinfile:
+    line: "source /etc/network/interfaces.d/92-openstack"
+    state: present
+    path: /etc/network/interfaces
+# As the tag apparently can change when the controller is rebooted, we
+# run a script whenever the ovs agent is restarted
+- name: Create restart script
+  template:
+    src: update_lb_port_tag.sh
+    dest: "{{install_user_home}}/update_lb_port_tag.sh"
+    mode: 0700
+    owner: root
+- name: Add restart script to service configuration for ovs agent
+  lineinfile:
+    line: "ExecStartPost={{install_user_home}}/update_lb_port_tag.sh"
+    insertafter: "^ExecStart="
+    firstmatch: yes
+    state: present
+    path: /lib/systemd/system/neutron-openvswitch-agent.service
+
 
 - name: Load public key for amphora access 
   os_keypair:
