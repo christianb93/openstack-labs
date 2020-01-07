@@ -49,19 +49,21 @@ Changes done for the API server as well (though they are not all needed, we do t
 * change the values in the auth_token section 
 * set a topic name in oslo_messaging
 * in the service_auth section, configure the authentication data that Octavia will use to communicate with other services (though this is apparantly not really needed by the API service itself)
+* modify *compute_driver* so that the Nova driver is used. 
+* modify *network_driver* to use the allowed address pairs driver
+
 
 Additional changes:
 
 * set the *cert_manager* so that the local cert manager is used (and we do not need Barbican)
 * set all certificates according to the table above
+* set *server_certs_key_passphrase*, this really needs to be 32 bytes long otherwise we get an error when trying to create an amphora
 * set the *amp_ssh_key_name* to amphora-key, this is the name of the key Nova will place on each newly created amphora
 * set the *amp_flavor_id* to the ID of the flavor that we have created for the amphora image
-* set the *amp_image_tag* to the tag that we use to identify an image ("amphora"), and set the *amp_image_owner_id* to the id of the octavia keystone user
+* set the *amp_image_tag* to the tag that we use to identify an image ("amphora"), and set the *amp_image_owner_id* to the id of the service project (not the octavia user!)
 * set the *amp_boot_network_list* to the UUID of the load balancer network that we have created. When an amphora instance is [created](https://github.com/openstack/octavia/blob/9904b26a9c40f29f554c56e9e65f6396caa8fea9/octavia/compute/drivers/nova_driver.py#L147), this list is [retrieved](https://github.com/openstack/octavia/blob/9904b26a9c40f29f554c56e9e65f6396caa8fea9/octavia/controller/worker/tasks/compute_tasks.py#L60) from the configuration and the instance is attached to each network contained in it, and when I interpret [this piece of code](https://github.com/openstack/octavia/blob/9904b26a9c40f29f554c56e9e65f6396caa8fea9/octavia/compute/drivers/nova_driver.py#L231) correctly, then the first network in this list is considered to be "the" load balancer network from Octavias point of view. 
 * populate *amp_secgroup_list* to apply the load balancer network security group to the amphorae
 * set the *amphora_driver* to the amphora_haproxy_rest_driver (the standard REST driver coming with Octavia)
-* modify *compute_driver* so that the Nova driver is used. 
-* modify *network_driver* to use the allowed address pairs driver
 * remark: we do not change the default (noop driver) for the volume driver, so that Octavia will boot the instances from the disk image
 * in the glance section, we point Octavia to the Glance service in our only region (RegionOne)
 * in the haproxy_amphora section, we set the bind host to 0.0.0.0, this is the IP address to which the agent will bind on the amphora
@@ -88,7 +90,7 @@ The following variables need to be set when calling this role.
 * octavia_keystone_user_password - a password for the new octavia user in Keystone
 * mq_node - the node on which RabbitMQ is running
 * rabbitmq_password - password of the RabbitMQ user
-
+* amphora_image_url - URL of the Amphora image to use
 
 Dependencies
 ------------

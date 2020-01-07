@@ -19,6 +19,7 @@ The following changes are made to the default configuration:
 * change the values in the auth_token section 
 * set a topic name in oslo_messaging
 * in the service_auth section, configure the authentication data that Octavia will use to communicate with other services (though this is apparantly not really needed by the API service itself)
+* set amphora driver, compute driver and network driver (the reason we need this here is that the API server will already ask the network driver to allocate a VIP port, and if the noop driver is still set, this port is later not found by the controller)
 
 Requirements
 ------------

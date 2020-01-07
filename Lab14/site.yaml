@@ -374,7 +374,9 @@
     global_vars.yaml
   vars:
     keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
+    octavia_db_user_password: "{{OS_SERVICE_PASSWORD}}"    
     octavia_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - octavia_controlplane
   

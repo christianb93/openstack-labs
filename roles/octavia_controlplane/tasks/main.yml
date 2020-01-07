@@ -47,10 +47,11 @@
     src: "{{credentials_dir}}/client_cert/client_cert.pem"
     owner: root
     group: octavia
-    mode: 0750
+    mode: 0740
   loop:
   - install_ca
   - octavia_ca
+
 
 # Create flavor for the amphorae
 - name: Create flavor for amphorae
@@ -231,9 +232,6 @@
     network: "octavia-lb-network"
   register:
     octavia_access_port
-- name: check
-  debug:
-    var: octavia_access_port
 - name: Remember IP and MAC of access port for later use 
   set_fact:
     lb_network_mgmt_ip: "{{octavia_access_port.port.fixed_ips[0].ip_address}}"
@@ -254,9 +252,6 @@
 - name: Remember value for later use 
   set_fact:
     local_vlan_id: "{{tag.stdout}}"
-- name: test 
-  debug:
-    var: local_vlan_id
 - name: Create OVS access port for this local VLAN ID on integration bridge 
   openvswitch_port:
     bridge: br-int
@@ -281,3 +276,88 @@
     auth_type: password
     name: amphora-key
     public_key_file: "{{install_user_home}}/amphora-key.pub"
+
+- name: Download amphora image
+  get_url:
+    dest: "{{install_user_home}}/amphora.qcow2"
+    url: "{{amphora_image_url}}"
+    owner: "{{install_user}}"
+    group: "{{install_user}}" 
+    mode: 0700
+
+- name: Upload image to glance 
+  os_image:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: octavia
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "service"
+      password: "{{octavia_keystone_user_password}}"
+    auth_type: password
+    filename: "{{install_user_home}}/amphora.qcow2"
+    interface: public
+    name: amphora-image
+    is_public: no
+    state: present
+- name: Tag image 
+  shell: |
+    . {{install_user_home}}/octavia-openrc && openstack image set --tag amphora amphora-image  
+
+# We need to get the ID of the service project
+- name: Get ID of service project
+  os_project:
+    auth:
+      auth_url: http://{{api_node}}:5000/v3
+      username: admin
+      os_user_domain_name: "default"
+      os_project_domain_name: "default"
+      os_project_name: "admin"
+      password: "{{OS_ADMIN_PASSWORD}}"
+    auth_type: password
+    description: "Service Project"
+    name: "service"
+    domain: "default"
+    state: present
+  register:
+      service_project
+- name: Remember project ID for later use 
+  set_fact:
+    service_project_id: "{{service_project.project.id}}"
+
+# Apparently, the Ubuntu sources contain an outdated version which is not the one in the
+# stable stein branch. To be on the safe side get the latest version from Git
+- name: Check whether we already have the source code 
+  stat:
+    path: "{{install_user_home}}/octavia"
+  register: st 
+- name: Get correct source code from Git
+  git: 
+    repo: 'https://github.com/openstack/octavia.git'
+    dest: "{{install_user_home}}/octavia"
+    version: "stable/stein"
+    depth: 1
+  when:
+    st.stat.exists == False
+- name: Install from source 
+  shell: 
+    cd octavia && python3 setup.py install
+
+
+- name: create configuration file 
+  template:
+    src: octavia.conf.j2
+    dest: /etc/octavia/octavia.conf
+    mode: 0755
+    owner: root
+    group: octavia
+  
+
+- name: Restart services 
+  service:
+    state: restarted
+    name: "{{item}}"
+  loop:
+    - octavia-health-manager
+    - octavia-housekeeping
+    - octavia-worker

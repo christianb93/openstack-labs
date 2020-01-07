@@ -45,4 +45,6 @@ cinder_os_region_name: "RegionOne"
 # The device on the storage node that Cinder will use as a physical LVM volume
 # WARNING: specifying the wrong device might destroy data!
 cinder_storage_device: "/dev/sdc"
-
+# URL of the amphora image. This can either be a file location (file://) or a http
+# link
+amphora_image_url: "file:///vagrant/amphora-x64-haproxy.qcow2"

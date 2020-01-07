@@ -29,15 +29,16 @@
     pwgen -1
   register: pwgen_os
   when: credentials_yaml.stat.exists == False
+  # Make this 32 bytes long, so that we also use it as a fernet key
 - name: Create shared secrent for metadata agent
   shell:
-    pwgen -1 50
+    pwgen -1 32
   register: pwgen_metadata
   when: credentials_yaml.stat.exists == False
 - name: Create secure demo user password
   shell:
     pwgen -1
-  register: pwgen_demo
+  register: pwgen_demo  
   when: credentials_yaml.stat.exists == False
 - name: Create credentials
   template:

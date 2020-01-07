@@ -410,13 +410,20 @@ api_v1_enabled = false
 #client_ca = /etc/octavia/certs/ca_01.pem
 
 # Name of the amphora driver to use (string value)
-#amphora_driver = amphora_noop_driver
+#<!--- CHANGED 
+amphora_driver = amphora_haproxy_rest_driver
+# CHANGED --->
 
 # Name of the compute driver to use (string value)
-#compute_driver = compute_noop_driver
+#<!--- CHANGED 
+compute_driver = compute_nova_driver
+# CHANGED --->
 
 # Name of the network driver to use (string value)
-#network_driver = network_noop_driver
+#<!--- CHANGED 
+network_driver = allowed_address_pairs_driver
+# CHANGED --->
+
 
 # Name of the distributor driver to use (string value)
 #distributor_driver = distributor_noop_driver

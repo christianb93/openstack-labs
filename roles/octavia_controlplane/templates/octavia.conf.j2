@@ -356,8 +356,8 @@ ca_private_key = /etc/octavia/keys/octavia_ca.rsa
 
 # Passphrase for encrypting Amphora Certificates and Private Keys. Defaults to env[TLS_PASS_AMPS_DEFAULT] or insecure-key-do-not-use-this-
 # key (string value)
-# <!--- CHANGED 
-server_certs_key_passphrase = {{OS_ADMIN_PASSWORD}}
+# <!--- CHANGED  {
+server_certs_key_passphrase = {{OS_SHARED_SECRET}}
 # CHANGED --->
 # Certificate signing digest. Defaults to env[OS_OCTAVIA_CA_SIGNING_DIGEST] or "sha256". (string value)
 #signing_digest = sha256
@@ -380,7 +380,7 @@ server_certs_key_passphrase = {{OS_ADMIN_PASSWORD}}
 #amp_active_wait_sec = 10
 
 # Nova instance flavor id for the Amphora (string value)
-<! --- CHANGED 
+#<! --- CHANGED 
 amp_flavor_id = {{amphora_flavor_id}}
 # CHANGED --->
 
@@ -398,7 +398,7 @@ amp_image_tag = amphora
 
 # Restrict glance image selection to a specific owner ID.  This is a recommended security setting. (string value)
 #<!--- CHANGED 
-amp_image_owner_id = {{octavia_user_id}}
+amp_image_owner_id = {{service_project_id}}
 # CHANGED --->
 
 # Optional SSH keypair name, in nova, that will be used for the authorized_keys inside the amphora. (string value)
@@ -752,8 +752,8 @@ bind_ip = {{lb_network_mgmt_ip}}
 
 # key used to validate amphora sending the message (string value)
 # Note: This option can be changed without restarting.
-<!--- CHANGED 
-heartbeat_key = {{OS_ADMIN_PASSWORD
+#<!--- CHANGED 
+heartbeat_key = {{OS_ADMIN_PASSWORD}}
 # CHANGED --->
 # Interval, in seconds, to wait before failing over an amphora. (integer value)
 #heartbeat_timeout = 60
@@ -858,7 +858,7 @@ user_domain_name = Default
 project_name = service
 username = octavia
 password = {{octavia_keystone_user_password}}
-
+# CHANGED --->
 # Complete "public" Identity API endpoint. This endpoint should not be an "admin" endpoint, as it should be accessible by all end users.
 # Unauthenticated clients are redirected to this endpoint to authenticate. Although this endpoint should ideally be unversioned, client
 # support in the wild varies. If you're using a versioned v2 endpoint here, then this should *not* be the same endpoint the service user

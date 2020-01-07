@@ -36,9 +36,6 @@
     state: present
   register:
     octavia_user
-- name: Remember user ID for later use 
-  set_fact:
-    octavia_user_id: "{{octavia_user.user.id}}"
 - name: Assign admin role to newly created octavia user
   os_user_role:
     auth:
@@ -79,7 +76,7 @@
     endpoint_interface: "{{item}}"
     service: octavia
     region: RegionOne
-    url: "http://{{api_node}}:8778"
+    url: "http://{{api_node}}:9876"
     state: present
   loop:
     - public
