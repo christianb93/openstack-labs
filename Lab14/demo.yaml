@@ -1,10 +1,5 @@
 ---
-##########################################################################
-# A playbook to set up a demo on a running OpenStack instance. This will
-# run on the instance_node which needs to be present in the inventory.
-#
-# This playbook uses the credentials created by site.yaml
-##########################################################################
+
 
 - name: Import credentials
   hosts: all
@@ -121,8 +116,8 @@
         port_range_min: 22
         remote_ip_prefix: "0.0.0.0/0"
         security_group: default
-        state: present
-    - name: Create flat network (shared, owned by admin)
+        state: present        
+    - name: Create external, flat network (shared, owned by admin)
       os_network:
         auth:
           auth_url: http://controller:5000/v3
@@ -133,12 +128,12 @@
           password: "{{OS_ADMIN_PASSWORD}}"
         auth_type: password
         external: yes
-        name: flat-network
+        name: external-network
         provider_network_type: flat
         provider_physical_network: physnet
         shared: true
         state: present
-    - name: Create VXLAN network (owned by demo user)
+    - name: Create internal, VXLAN network (owned by demo project)
       os_network:
         auth:
           auth_url: http://controller:5000/v3
@@ -149,10 +144,10 @@
           password: "{{OS_DEMO_PASSWORD}}"
         auth_type: password
         external: no
-        name: vxlan-network
+        name: internal-network
         shared: false
         state: present
-    - name: Create subnet on VXLAN network
+    - name: Create subnet on internal network
       os_subnet:
         auth:
           auth_url: http://controller:5000/v3
@@ -165,12 +160,12 @@
         enable_dhcp: yes
         gateway_ip: 172.18.0.1
         cidr: 172.18.0.0/24
-        network_name: vxlan-network
-        name: vxlan-subnet
+        network_name: internal-network
+        name: internal-subnet
         state: present
         allocation_pool_start: 172.18.0.2
-        allocation_pool_end:  172.18.0.10
-    - name: Create subnet on flat network
+        allocation_pool_end:  172.18.0.100
+    - name: Create subnet on external network
       os_subnet:
         auth:
           auth_url: http://controller:5000/v3
@@ -183,12 +178,12 @@
         enable_dhcp: yes
         gateway_ip: 172.16.0.1
         cidr: 172.16.0.0/24
-        network_name: flat-network
-        name: flat-subnet
+        network_name: external-network
+        name: external-subnet
         state: present
         allocation_pool_start: 172.16.0.2
-        allocation_pool_end:  172.16.0.10
-    - name: Create router to access our instances from the flat network
+        allocation_pool_end:  172.16.0.100
+    - name: Create router to access our instances from the external network
       os_router:
         auth:
           auth_url: http://controller:5000/v3
@@ -199,8 +194,70 @@
           password: "{{OS_DEMO_PASSWORD}}"
         auth_type: password
         interfaces:
-          vxlan-subnet
+          internal-subnet
         name: demo-router
-        network: flat-network   
+        network: external-network   
+
+- name: Create test instances and show results
+  hosts: install_node
+  vars_files:
+    global_vars.yaml
+  tasks:
+    - name: Create two instances in the internal network that we have just created
+      os_server:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        name: "{{item}}"
+        auto_ip: no
+        flavor: m1.nano
+        image: cirros
+        key_name: "{{ssh_key_name}}"
+        network: internal-network
+        security_groups:
+          - default
+      loop:
+        - web-1
+        - web-2
+    - name: Retrieve server list
+      os_server_facts:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        server: "web-*"
+      register: server_info
+    - name: Show output
+      debug:
+        var: server_info
+    - name: Associate floating IP addresses
+      os_floating_ip:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: demo
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "demo"
+          password: "{{OS_DEMO_PASSWORD}}"
+        auth_type: password
+        reuse: yes
+        nat_destination: internal-network
+        network: external-network
+        server: "{{item}}"
+        state: present
+        wait: yes
+      loop:
+        - web-1
+        - web-2
+      register: floating_ip
 
 
