@@ -14,6 +14,8 @@ A collection of scripts and Ansible playbooks around OpenStack. Here is a list o
 * Lab10 - Introduce a separate network node on which the Neutron agents run
 * Lab11 - Play with iSCSI
 * Lab12 - LVM playground
+* Lab13 - Install Cinder
+* Lab14 - Octavia as stand-alone loadbalancer
 
 In addition, this repository contains scripts to bring up an OpenStack playground on various cloud platform - a cloud in the cloud.
 
