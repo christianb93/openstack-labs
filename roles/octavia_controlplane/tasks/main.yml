@@ -207,13 +207,13 @@
       password: "{{octavia_keystone_user_password}}"
     auth_type: password
     enable_dhcp: yes
-    gateway_ip: 172.20.0.1
-    cidr: 172.20.0.0/24
+    gateway_ip: "{{lb_network_gateway_ip}}"
+    cidr: "{{lb_network_cidr}}"
     network_name: octavia-lb-network
     name: octavia-lb-subnet
     state: present
-    allocation_pool_start: 172.20.0.10
-    allocation_pool_end:  172.20.0.100
+    allocation_pool_start: "{{lb_network_allocation_start}}"
+    allocation_pool_end:  "{{lb_network_allocation_end}}"
 
 - name: Create a port on the load balancer network 
   os_port:

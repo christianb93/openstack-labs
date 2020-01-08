@@ -52,3 +52,8 @@ amphora_image_url: "file:///vagrant/amphora-x64-haproxy.qcow2"
 # this is the MTU of the underlying device. Set this to the network MTU minus 50 as the load
 # balancer network is a VXLAN network
 lb_port_mtu: 1450
+# These parameters determine the IP ranges that we use for the load balancer network
+lb_network_cidr: "172.20.0.0/24"
+lb_network_gateway_ip: "172.20.0.1"
+lb_network_allocation_start: "172.20.0.2"
+lb_network_allocation_end: "172.20.0.100"

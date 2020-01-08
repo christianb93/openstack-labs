@@ -95,6 +95,10 @@ The following variables need to be set when calling this role.
 * rabbitmq_password - password of the RabbitMQ user
 * amphora_image_url - URL of the Amphora image to use
 * lb_port_mtu - the MTU to use for the port that we create to access the load balancer network
+* lb_network_cidr - the CIDR of the load balancer network
+* lb_network_allocation_start, lb_network_allocation_end - start and end IP address of load balancer network
+*  lb_network_gateway_ip - IP address reserved for gateway of load balancer network
+
 
 Dependencies
 ------------
