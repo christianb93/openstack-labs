@@ -59,3 +59,8 @@ amphora_image_url: "https://s3.eu-central-1.amazonaws.com/cloud.leftasexercise.c
 # this is the MTU of the underlying device. Set this to the network MTU minus 50 as the load
 # balancer network is a VXLAN network
 lb_port_mtu: 1410
+# These parameters determine the IP ranges that we use for the load balancer network
+lb_network_cidr: "172.20.0.0/24"
+lb_network_gateway_ip: "172.20.0.1"
+lb_network_allocation_start: "172.20.0.2"
+lb_network_allocation_end: "172.20.0.100"
