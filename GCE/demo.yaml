@@ -1,5 +1,9 @@
 ---
 
+- name: Run Terraform and build inventory dynamically
+  hosts: localhost
+  roles:
+  - terraform
 
 - name: Import credentials
   hosts: all
