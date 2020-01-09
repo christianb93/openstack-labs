@@ -20,7 +20,7 @@
         {{ item[1].extra_ssh_config_items | default("")}}
 
     EOF
-  loop: "{{ hostvars.items() }}"
+  loop: "{{ hostvars.items() | list }}"
   loop_control:
     label: "{{item[0]}}"
 - name: Include our file in main config file
