@@ -22,10 +22,10 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-type_drivers - comma-separated list of the type driver that we want to support
-tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
-flat_networks - comma-separated list of flat networks that we provide
-ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There needs to be one mapping for each network that we define
+* type_drivers - comma-separated list of the type driver that we want to support
+* tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
+* flat_networks - comma-separated list of flat networks that we provide
+* ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There needs to be one mapping for each network that we define
 
 For the following variables, defaults are defined:
 

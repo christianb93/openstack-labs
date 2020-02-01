@@ -19,12 +19,12 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-api_node - the name of node on which Keystone is running  
-memcached_node - the name of the node on which memcached is running
-db_node - the name of the node on which MySQL is running
-keystone_admin_password - the password of the admin user in keystone
-placement_db_user_password - password that we will use for the placement DB user
-placement_keystone_user_password - the password that we will set for the placement user in Keystone
+* api_node - the name of node on which Keystone is running  
+* memcached_node - the name of the node on which memcached is running
+* db_node - the name of the node on which MySQL is running
+* keystone_admin_password - the password of the admin user in keystone
+* placement_db_user_password - password that we will use for the placement DB user
+* placement_keystone_user_password - the password that we will set for the placement user in Keystone
 
 Dependencies
 ------------

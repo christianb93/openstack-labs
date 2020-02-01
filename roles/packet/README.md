@@ -13,12 +13,12 @@ Role Variables
 
 For the following variables, defaults are defined but can be overridden.
 
-packetKeyFile - the private key of an SSH key pair. The script assumes that the matching public key is stored in a file with the same name with suffix *.pub* and will upload this key to Packet, so that it is automatically added the the authorized keys for the root user
-packetKeyName - the name that we use to upload the SSH key to Packet
-packetFacilitySlug - the Packet facility where we bring up the machine 
-machineCount - the number of servers that we start
-nameRoot - the root part of the name. The servers will be called {{nameRoot}}1, ... starting with index 1
-packetSSHConfigFile - the name of the SSH configuration file that we create
+* packetKeyFile - the private key of an SSH key pair. The script assumes that the matching public key is stored in a file with the same name with suffix *.pub* and will upload this key to Packet, so that it is automatically added the the authorized keys for the root user
+* packetKeyName - the name that we use to upload the SSH key to Packet
+* packetFacilitySlug - the Packet facility where we bring up the machine 
+* machineCount - the number of servers that we start
+* nameRoot - the root part of the name. The servers will be called {{nameRoot}}1, ... starting with index 1
+* packetSSHConfigFile - the name of the SSH configuration file that we create
 
 Dependencies
 ------------

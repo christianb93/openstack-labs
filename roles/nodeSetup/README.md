@@ -27,21 +27,21 @@ Role Variables
 
 The following variables need to be set when invoking this role:
 
-credentials_dir - the directory in which the credentials are created
-install_user - the user which we will use to run those parts of the installation process which do not require elevated privileges - default vagrant
-install_user_home - the home directory of this user on each node
-ssh_key_name - the name of the SSH key to distribute
-vm_network_device - this is the name of the device that we use for inter-VM traffic on layer2. We expect that this device has no IP address assigned and simply bring it up
-phys_interface - the name of a virtual or physical interface to which we will connect the physical bridge
-phys_bridge_name - name of the physical bridge (typically br-phys)
+* credentials_dir - the directory in which the credentials are created
+* install_user - the user which we will use to run those parts of the installation process which do not require elevated privileges - default vagrant
+* install_user_home - the home directory of this user on each node
+* ssh_key_name - the name of the SSH key to distribute
+* vm_network_device - this is the name of the device that we use for inter-VM traffic on layer2. We expect that this device has no IP address assigned and simply bring it up
+* phys_interface - the name of a virtual or physical interface to which we will connect the physical bridge
+* phys_bridge_name - name of the physical bridge (typically br-phys)
 
 
 The following variables are used but have a default:
 
-openstack_release - the name of the Openstack release that we install
-use_apt_proxy - use a proxy server for APT  (default: False)
-apt_proxy_url - proxy URL for ATP
-phys_bridge_create - boolean, whether to create a physical bridge on this node (defaults to false)
+* openstack_release - the name of the Openstack release that we install
+* use_apt_proxy - use a proxy server for APT  (default: False)
+* apt_proxy_url - proxy URL for ATP
+* phys_bridge_create - boolean, whether to create a physical bridge on this node (defaults to false)
 
 Dependencies
 ------------

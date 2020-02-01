@@ -22,8 +22,8 @@ Role Variables
 
 The following variables are assumed to be set when calling this role:
 
-ssh_key_name - this is the name which is used for the SSH key pair
-credentials_dir: the directory in which we store the credentials. It will be generated if it does not yet exist
+* ssh_key_name - this is the name which is used for the SSH key pair
+* credentials_dir: the directory in which we store the credentials. It will be generated if it does not yet exist
 
 Dependencies
 ------------

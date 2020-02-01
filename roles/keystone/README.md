@@ -18,9 +18,9 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-db_node: name of the MySQL server that Keystone will use
-keystone_db_user_password - this password will be used when we create the keystone DB user
-OS_ADMIN_PASSWORD - this will initially be used as the Keystone admin password
+* db_node: name of the MySQL server that Keystone will use
+* keystone_db_user_password - this password will be used when we create the keystone DB user
+* OS_ADMIN_PASSWORD - this will initially be used as the Keystone admin password
 
 
 

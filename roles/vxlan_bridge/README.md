@@ -18,11 +18,11 @@ Role Variables
 
 The following variables need to be set when invoking this role:
 
-bridge_name - the name of the bridge that we create
-patch_port_local_name - the name of the local patch port that is created
-patch_port_peer_name - the name of the existing patch port to which we connect
-vxlan_nodes - IP address of other nodes to which we connect the bridge
-vxlan_id - the VXLAN ID (segmentation ID) that we use
+* bridge_name - the name of the bridge that we create
+* patch_port_local_name - the name of the local patch port that is created
+* patch_port_peer_name - the name of the existing patch port to which we connect
+* vxlan_nodes - IP address of other nodes to which we connect the bridge
+* vxlan_id - the VXLAN ID (segmentation ID) that we use
 
 Dependencies
 ------------

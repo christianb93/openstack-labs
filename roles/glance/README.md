@@ -1,7 +1,7 @@
 glance
 =========
 
-This role installs Glance on a node. The following configuration are done compared to the packaged version of the configuration files.
+This role installs Glance on a node. The following configuration items are changed compared to the packaged version of the configuration files.
 
 In glance-api.conf:
 
@@ -28,17 +28,17 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-api_node: the name of the node on which Keystone is running
-db_node: name of the MySQL server that Glance will use
-memcached_node: name of the server on which memcached is running
-glance_db_user_password - this password will be used when we create the glance DB user
-keystone_admin_password - the password of the admin user in Keystone
-glance_keystone_user_password - the password that we will set for the Glance user in Keystone  
-install_user_home - the home directory of the user running the install
+* api_node: the name of the node on which Keystone is running
+* db_node: name of the MySQL server that Glance will use
+* memcached_node: name of the server on which memcached is running
+* glance_db_user_password - this password will be used when we create the glance DB user
+* keystone_admin_password - the password of the admin user in Keystone
+* glance_keystone_user_password - the password that we will set for the Glance user in Keystone  
+* install_user_home - the home directory of the user running the install
 
 For the following variable, a default is defined.
 
-cirros_download_url - the URL from which we will try to download the CirrOS image.
+* cirros_download_url - the URL from which we will try to download the CirrOS image.
 
 
 Dependencies

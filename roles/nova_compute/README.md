@@ -35,20 +35,20 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-api_node - the name of node on which Keystone is running  
-memcached_node - the name of the node on which memcached is running
-mq_node - the name on which the RabbitMQ service is running
-neutron_keystone_user_password - the password of the neutron Keystone user
-rabbitmq_password - the password to use for the openstack user in RabbitMQ
-keystone_admin_password - the password of the admin user in keystone
-nova_db_user_password - password that we will use for the nova DB user
-nova_keystone_user_password - the password that we will set for the nova user in Keystone
-placement_keystone_user_password - the password of the placement Keystone user
+* api_node - the name of node on which Keystone is running  
+* memcached_node - the name of the node on which memcached is running
+* mq_node - the name on which the RabbitMQ service is running
+* neutron_keystone_user_password - the password of the neutron Keystone user
+* rabbitmq_password - the password to use for the openstack user in RabbitMQ
+* keystone_admin_password - the password of the admin user in keystone
+* nova_db_user_password - password that we will use for the nova DB user
+* nova_keystone_user_password - the password that we will set for the nova user in Keystone
+* placement_keystone_user_password - the password of the placement Keystone user
 
 
 For the following variable, we define a default within this role.
 
-virt_type - virtualization type to use, either kvm (preferred) or qemu (use this if your compute nodes do not support hardware acceleration).
+* virt_type - virtualization type to use, either kvm (preferred) or qemu (use this if your compute nodes do not support hardware acceleration).
 
 Dependencies
 ------------

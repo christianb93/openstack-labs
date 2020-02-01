@@ -38,18 +38,18 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-mq_node - name of the node on which RabbitMQ is running
-db_node - name of the node on which MySQL is running
-neutron_keystone_user_password - the password of the neutron user in Keystone
-neutron_db_user_password - the password that we assign to the neutron DB user
-nova_keystone_user_password - the password of the nova user in keystone
-rabbitmq_password - password of the openstack user in RabbitMQ
-api_node - the name of the node on which Keystone is running
-memcached_node - name of the node on which memcached is running
-flat_networks - comma-separated list of flat networks that we provide
-type_drivers - comma-separated list of the type driver that we want to support
-tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
-keystone_admin_password - the password of the admin user in Keystone
+* mq_node - name of the node on which RabbitMQ is running
+* db_node - name of the node on which MySQL is running
+* neutron_keystone_user_password - the password of the neutron user in Keystone
+* neutron_db_user_password - the password that we assign to the neutron DB user
+* nova_keystone_user_password - the password of the nova user in keystone
+* rabbitmq_password - password of the openstack user in RabbitMQ
+* api_node - the name of the node on which Keystone is running
+* memcached_node - name of the node on which memcached is running
+* flat_networks - comma-separated list of flat networks that we provide
+* type_drivers - comma-separated list of the type driver that we want to support
+* tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
+* keystone_admin_password - the password of the admin user in Keystone
 
 
 For the following variables, defaults are defined

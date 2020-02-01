@@ -15,8 +15,8 @@ None
 Role Variables
 --------------
 
-lab - the name of the lab to run, e.g. Lab6
-run_demo - boolean, also run demo.yaml, of course this only works if you select a lab which contains a demo
+* lab - the name of the lab to run, e.g. Lab6
+* run_demo - boolean, also run demo.yaml, of course this only works if you select a lab which contains a demo
 
 
 Dependencies

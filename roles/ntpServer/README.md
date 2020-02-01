@@ -11,7 +11,7 @@ None
 Role Variables
 --------------
 
-ntp_network_cidr: the network on which the server will be listening
+* ntp_network_cidr: the network on which the server will be listening
 
 Dependencies
 ------------

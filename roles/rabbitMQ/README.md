@@ -13,8 +13,8 @@ Role Variables
 
 The following variable needs to be set when calling this role.
 
-rabbitmq_user_name - name of the user that we create
-rabbit_user_password - password of that user
+* rabbitmq_user_name - name of the user that we create
+* rabbit_user_password - password of that user
 
 Dependencies
 ------------

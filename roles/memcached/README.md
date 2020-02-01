@@ -13,7 +13,7 @@ Role Variables
 
 The following variable has a default, but can be overwritten if needed.
 
-memcached_server_ip: the IP address on which the server will listen 
+* memcached_server_ip: the IP address on which the server will listen 
 
 Dependencies
 ------------

@@ -1,4 +1,4 @@
-neutron_server
+neutron_agents
 =========
 
 This role installs the neutron agents (OVS agent, DHCP agent, metadata agent) on a node. This requires the preparation of the following configuration files.
@@ -39,24 +39,24 @@ Role Variables
 
 The following variables need to be set when calling this role.
 
-api_node - the name of the node on which Nova is running
-mq_node - the name of the node on which RabbitMQ is running
-db_node - the node on which the database is running
-memcached_node - the node on which Memcached is running
-rabbitmq_password- the password for RabbitMQ
-neutron_db_user_password - the password for the Neutron DB user
-neutron_keystone_user_password - the password for the Neutron user in Keystone
-nova_keystone_user_password - the password for the Nova user in Keystone
-metadata_shared_secret - the shared secret for the connection between the metadata proxy and Nova
-type_drivers - comma-separated list of the type driver that we want to support
-tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
-flat_networks - comma-separated list of flat networks that we provide
-ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There needs to be one mapping for each network that we define
+* api_node - the name of the node on which Nova is running
+* mq_node - the name of the node on which RabbitMQ is running
+* db_node - the node on which the database is running
+* memcached_node - the node on which Memcached is running
+* rabbitmq_password- the password for RabbitMQ
+* neutron_db_user_password - the password for the Neutron DB user
+* neutron_keystone_user_password - the password for the Neutron user in Keystone
+* nova_keystone_user_password - the password for the Nova user in Keystone
+* metadata_shared_secret - the shared secret for the connection between the metadata proxy and Nova
+* type_drivers - comma-separated list of the type driver that we want to support
+* tenant_network_types - comma-separated list of network types that we make available as project networks, can be emtpy
+* flat_networks - comma-separated list of flat networks that we provide
+* ovs_bridge_mappings - OVS agent bridge mappings, like "physnet:br-phys". There needs to be one mapping for each network that we define
 
 For the following variables, defaults are provided.
 
-service_plugins - list of service plugins to be included
-global_dns_servers - a list of DNS servers to use if no other DNS server is specified for a subnet
+* service_plugins - list of service plugins to be included
+* global_dns_servers - a list of DNS servers to use if no other DNS server is specified for a subnet
 
 Dependencies
 ------------
