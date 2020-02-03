@@ -3,7 +3,8 @@ nova
 
 This role installs the nova service on a node. The following configuration are done compared to the packaged version of the configuration file (nova.conf)
 
-* we set the IP on which the Nova services will be listening to the management IP of the controller node (taken from an inventory variable)
+* we set the IP on which the Nova services will be listening to the management IP of the controller node (taken from an inventory variable) - this is done by adjusting *osapi_compute_listen* for the core API and *metadata_listen* for the metadata API
+* similarly, we set *novncproxy_listen* to the management IP so that the noVNC proxy will listen on the management interface as well
 * we set use_neutron = true to ask Nova to use Neutron instead of the deprecated nova-network
 * we set the firewall_driver to nova.virt.firewall.NoopFirewallDriver to disable it (as described in the comments in the sample configuration)
 * we set the transport_url to connect to the RabbitMQ server on the MQ node node using the user openstack and its password

@@ -2828,7 +2828,9 @@ firewall_driver = nova.virt.firewall.NoopFirewallDriver
 # The OpenStack API service listens on this IP address for incoming
 # requests.
 #  (string value)
-#osapi_compute_listen = 0.0.0.0
+#<!--- CHANGED 
+osapi_compute_listen = {{mgmt_ip}}
+# CHANGED --->
 
 #
 # Port on which the OpenStack API will listen.
@@ -2863,7 +2865,9 @@ firewall_driver = nova.virt.firewall.NoopFirewallDriver
 # The metadata API service listens on this IP address for incoming
 # requests.
 #  (string value)
-#metadata_listen = 0.0.0.0
+#<!--- CHANGED
+metadata_listen = {{mgmt_ip}}
+# CHANGED ---> 
 
 #
 # Port on which the metadata API will listen.
@@ -10731,7 +10735,9 @@ password = {{placement_keystone_user_password}}
 # * novncproxy_port
 # * novncproxy_base_url
 #  (string value)
-#novncproxy_host = 0.0.0.0
+#<!---
+novncproxy_host = {{mgmt_ip}}
+# CHANGED --->
 
 #
 # Port that the noVNC console proxy should bind to.
