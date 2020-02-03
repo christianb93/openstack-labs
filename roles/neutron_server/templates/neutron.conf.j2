@@ -10,7 +10,9 @@ core_plugin = ml2
 #state_path = /var/lib/neutron
 
 # The host IP to bind to. (host address value)
-#bind_host = 0.0.0.0
+# <!--- CHANGED 
+bind_host = {{mgmt_ip}}
+# CHANGED --->
 
 # The port to bind to (port value)
 # Minimum value: 0
