@@ -53,6 +53,13 @@
     path: /etc/apache2/apache2.conf
     line: "ServerName {{inventory_hostname}}"
     state: present
+- name: Adjust virtual server configuration
+  template:
+    dest: /etc/apache2/sites-available/keystone.conf 
+    src: apache_keystone.conf.j2
+    owner: root 
+    group: root
+    mode: 0644
 - name: Restart apache
   service:
     name: apache2
