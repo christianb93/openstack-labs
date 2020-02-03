@@ -56,3 +56,40 @@
     placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - nova_compute
+
+
+#
+# Also run proxy configuration again for the same reason
+#    
+- name: Set up proxy on network node
+  hosts: network_nodes
+  become: yes
+  vars_files:
+    - global_vars.yaml
+  vars:
+    os_known_ports: ['5000', '8774', '8776', '8778', '9696', '9292', '9876']
+  roles: 
+  - proxy
+
+#
+# Print completion message and usage instructions once
+# more as the IP addresses might have changed
+#
+- name: Print completion message and usage instructions
+  hosts: localhost
+  vars_files:
+    global_vars.yaml
+  tasks:
+    - name: Read credentials 
+      include_vars:
+        file: "{{credentials_dir}}/credentials.yaml"
+    - name: Print completion
+      debug:
+        msg: 
+          - Done. To connect to the Horizon dashboard, point your browser to 
+          - https://{{hostvars.network.ansible_ssh_host}}/horizon 
+          - and ignore certificate errors (or import {{credentials_dir}}/nginx/ca.crt into your browser). 
+          - The password for the demo user is 
+          - "{{OS_DEMO_PASSWORD}}"
+          - The password for the admin user is
+          - "{{OS_ADMIN_PASSWORD}}"    

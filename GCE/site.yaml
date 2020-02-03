@@ -63,60 +63,39 @@
   - proxy
 
 ###########################################################################################
-# Now we simply include the actual Lab. Note that we really have to 
-# put the contents of the playbook here, as using import_playbook or
-# include will make Ansible use the group_vars in the lab folder, not the
-# group_vars in this folder
+# Now we run our plays as usual. Note that we cannot simply include a lab, as
+# using import_playbook or include will make Ansible use the group_vars in the lab folder, 
+# not the group_vars in this folder
+# We start with a few preparations
 ###########################################################################################
 
 
-# Make sure that all hosts are up before proceeding
-- name: Check connectivity
-  hosts: all
-  tasks:
-    - name: Check connectivity
-      ping:
-
-
-
 #
-# Now import the credentials just created. We cannot
-# include this in vars_files as the file is not yet
-# present when we run the playbook.
+# Import the credentials just created and run basic setup steps
+# on all nodes
 #
 - name: Import credentials
   hosts: all
   gather_facts: no
+  become: yes
   vars_files:
     global_vars.yaml
-  tasks:
+  pre_tasks:
     - name: Read credentials
       include_vars:
         file: "{{credentials_dir}}/credentials.yaml"
-
-#
-# Perform basic setup steps on all nodes. Among other things,
-# this will set up the APT configuration, so make sure that the
-# group_vars are reflecting the network setup. Here we also create
-# a physical bridge br-phys if needed 
-#
-- name: Basic node setup 
-  hosts: all
-  become: yes
-  vars_files:
-    - global_vars.yaml
   roles:
     - nodeSetup
+      
 
-
-# The next three plays set up our VXLAN network that we will 
+# The next two plays set up our VXLAN network that we will 
 # present to OpenStack Neutron as a physical provider network
 # The network will act as a virtual bridge, the compute nodes
 # will attach to this bridge. Finally, we set up the network node
 # so that it acts as a router between this network and the 
 # actual physical network
 
-- name: Create and wire up br-ext on network node
+- name: Do wiring and routing on network nodes
   hosts: network_nodes
   become: yes
   vars_files:
@@ -127,8 +106,16 @@
     patch_port_peer_name: "patch-{{phys_interface}}"
     vxlan_nodes: "{{ groups.compute_nodes  | map('extract', hostvars, 'underlay_ip') | list}}"
     vxlan_id: 100
+    public_interface: "{{router_public_interface}}"
+    internal_interface: "{{phys_interface}}"
+    internal_ip_address: "172.16.0.1/24"
+    internal_interface_mtu: 1450
+    # We open a few additional ports that we need to connect to the API, including
+    # port 6080 for the VNC proxy
+    os_known_ports: ['5000', '8774', '8776', '8778', '9696', '9292', '9876','443', '6080']
   roles:
     - vxlan_bridge
+    - router 
 
 - name: Create and wire up br-ext on compute nodes
   hosts: compute_nodes
@@ -144,26 +131,8 @@
   roles:
     - vxlan_node
      
-
-- name: Establish routing on network node to provide external connectivity for instances 
-  hosts: network_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    public_interface: "{{router_public_interface}}"
-    internal_interface: "{{phys_interface}}"
-    internal_ip_address: "172.16.0.1/24"
-    internal_interface_mtu: 1450
-    # We open a few additional ports that we need to connect to the API, including
-    # port 6080 for the VNC proxy
-    os_known_ports: ['5000', '8774', '8776', '8778', '9696', '9292', '9876','443', '6080']
-  roles:
-    - router
-
-
 #
-# Set up the controller node as NTP server
+# Set up the controller node as NTP server and install MariaDB, Memcached and RabbitMQ
 #
 - name: Install NTP on controller node
   hosts: controller_nodes
@@ -172,8 +141,17 @@
     global_vars.yaml
   vars:
     ntp_network_cidr: "{{management_network_cidr}}"
+    mariadb_server_ip: "{{hostvars[db_node].mgmt_ip}}"
+    mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
+    rabbit_user_name: "openstack"
+    rabbit_user_password: "{{OS_SERVICE_PASSWORD}}"
+    memcached_server_ip: "{{hostvars[memcached_node].mgmt_ip}}"
   roles:
     - ntpServer
+    - mariaDB
+    - rabbitMQ
+    - memcached
+
 
 #
 # Set up the compute nodes, network nodes and storage nodes as NTP clients
@@ -186,87 +164,51 @@
   roles:
     - ntpClient
 
-
-#
-# Install MariaDB, Memcached and RabbitMQ on the controller
-#
-- name: Install middleware on controller node
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    mariadb_server_ip: "{{hostvars[db_node].mgmt_ip}}"
-    mariadb_root_password: "{{MARIADB_ROOT_PASSWORD}}"
-    rabbit_user_name: "openstack"
-    rabbit_user_password: "{{OS_SERVICE_PASSWORD}}"
-    memcached_server_ip: "{{hostvars[memcached_node].mgmt_ip}}"
-  roles:
-    - mariaDB
-    - rabbitMQ
-    - memcached
+###########################################################################################
+# We are now ready to install the OpenStack components on controller node, network node,
+# storage nodes and compute nodes
+###########################################################################################
 
 
+  
 #
-# Install Keystone on the controller node
+# Install the OpenStack main control plane components on the controller node
 #
-- name: Install Keystone on controller node
+- name: Install OpenStack control plane components 
   hosts: controller_nodes
   become: yes
   vars_files:
     global_vars.yaml
   vars:
     keystone_db_user_password: "{{OS_SERVICE_PASSWORD}}"
-  roles:
-    - keystone
-
-
-#
-# Install Glance on the controller node
-#
-- name: Install Glance on controller node
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
+    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     glance_db_user_password: "{{OS_SERVICE_PASSWORD}}"
-    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     glance_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-  roles:
-    - glance
-
-#
-# Install Placement on the controller node
-#
-- name: Install Placement on controller node
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     placement_db_user_password: "{{OS_SERVICE_PASSWORD}}"
     placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-  roles:
-    - placement
-
-# 
-# Install the Cinder API server and the Cinder scheduler
-# on the controller node - this is the Cinder "control plane"
-#
-- name: Install Cinder on controller node
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
     cinder_db_user_password: "{{OS_SERVICE_PASSWORD}}"
     cinder_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
+    cinder_os_region_name: "RegionOne"    
+    octavia_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    octavia_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
+    neutron_db_user_password: "{{OS_SERVICE_PASSWORD}}"
+    horizon_physical_networks: "['physnet']"
+    horizon_supported_network_types: "['flat', 'vxlan']"
+    horizon_enable_router: True
   roles:
+    - keystone
+    - glance
+    - placement
     - cinder_server
+    - nova 
+    - neutron_server
+    - octavia_api
+    - horizon
 
 #
 # Install Cinder volume manager on the storage nodes
@@ -283,29 +225,9 @@
   roles:
     - cinder_node
 
-#
-# Install Nova on the controller node
-#
-- name: Install Nova on controller node
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
-    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
-    nova_db_user_password: "{{OS_SERVICE_PASSWORD}}"
-    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    metadata_shared_secret: "{{OS_SHARED_SECRET}}"
-    cinder_os_region_name: "RegionOne"
-  roles:
-    - nova
-
 
 #
-# Install Nova on the compute nodes
+# Install Nova and Neutron agents on the compute nodes
 #
 - name: Install Nova on compute nodes
   hosts: compute_nodes
@@ -321,6 +243,7 @@
     placement_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
     - nova_compute
+    - neutron_compute
 
 
 #
@@ -336,28 +259,9 @@
       shell:
         nova-manage cell_v2 discover_hosts
 
-
 #
-# Now we install the control plane components of 
-# Neutron on our controller
-#
-- name: Install Neutron on controller nodes
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    neutron_db_user_password: "{{OS_SERVICE_PASSWORD}}"
-    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
-    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
-  roles:
-    - neutron_server
-
-#
-#  All agents (DHCP,Metadata) will run on the
-# network node
+# All Neutron agents (DHCP,Metadata) will run on the
+# network node, as well as the Octavia control plane
 #
 - name: Install Neutron agents on network node
   hosts: network_nodes
@@ -370,78 +274,33 @@
     neutron_db_user_password: "{{OS_SERVICE_PASSWORD}}"
     neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
     nova_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"    
-  roles:
-    - neutron_agents
-
-- name: Install L3 agent 
-  hosts: network_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  roles:
-    - neutron_l3agent
-
-#
-# On the compute nodes, we need the OVS agents
-#
-- name: Finalize Neutron configuration on compute nodes
-  hosts: compute_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
-    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
-    neutron_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-  roles:
-    - neutron_compute
-
-#
-# Install Horizon on the controller node
-#
-- name: Install Horizon
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    horizon_physical_networks: "['physnet']"
-    horizon_supported_network_types: "['flat', 'vxlan']"
-    horizon_enable_router: True
-  roles:
-    - horizon
-
-
-#
-# Install Octavia API 
-#
-- name: Install Octavia API
-  hosts: controller_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
-    keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
-    octavia_db_user_password: "{{OS_SERVICE_PASSWORD}}"
-    octavia_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
-  roles:
-    - octavia_api
-
-#
-# Install Octavia control plane
-#
-
-- name: Install Octavia control plane 
-  hosts: network_nodes
-  become: yes
-  vars_files:
-    global_vars.yaml
-  vars:
     keystone_admin_password: "{{OS_ADMIN_PASSWORD}}"
     octavia_db_user_password: "{{OS_SERVICE_PASSWORD}}"    
     octavia_keystone_user_password: "{{OS_SERVICE_PASSWORD}}"
-    rabbitmq_password: "{{OS_SERVICE_PASSWORD}}"
   roles:
+    - neutron_agents
+    - neutron_l3agent
     - octavia_controlplane
+
  
+#
+# Print completion message and usage instructions
+#
+- name: Print completion message and usage instructions
+  hosts: localhost
+  vars_files:
+    global_vars.yaml
+  tasks:
+    - name: Read credentials 
+      include_vars:
+        file: "{{credentials_dir}}/credentials.yaml"
+    - name: Print completion
+      debug:
+        msg: 
+          - Done. To connect to the Horizon dashboard, point your browser to 
+          - https://{{hostvars.network.ansible_ssh_host}}/horizon 
+          - and ignore certificate errors (or import {{credentials_dir}}/nginx/ca.crt into your browser). 
+          - The password for the demo user is 
+          - "{{OS_DEMO_PASSWORD}}"
+          - The password for the admin user is
+          - "{{OS_ADMIN_PASSWORD}}"
