@@ -97,6 +97,13 @@
   become_user: placement
   shell:
     placement-manage db sync
+- name: Adjust Apache2 configuration for placement
+  template:
+    src: apache_placement.conf.j2
+    dest: /etc/apache2/sites-available/placement-api.conf
+    owner: root
+    group: root 
+    mode: 0644
 - name: Restart Apache
   service:
     name: apache2

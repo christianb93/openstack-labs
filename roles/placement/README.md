@@ -7,7 +7,7 @@ This role installs the placement service on a node. The following configuration 
 * we supply the data in the section keystone_authtoken that placement needs to connect (URL, node on which memcached is running, credentials)
 * we set the SQL connection string in the database section
 
-Note that the placement service will be running on top of Apache2
+Note that the placement service will be running on top of Apache2. We configure Apache2 (in */etc/sites-available/placement-api.conf*) such that it will only listen on the management IP for incoming requests for the Placement API.
 
 Requirements
 ------------
