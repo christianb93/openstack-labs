@@ -12,9 +12,19 @@
     owner: root 
     group: root
     mode: 0644 
+- name: Make sure that etc/nginx/certs exists 
+  file: 
+    state: directory
+    path: "/etc/nginx/certs"
+- name: Copy certificates for NGINX
+  copy:
+    src: "{{credentials_dir}}/nginx/{{item}}"
+    dest: "/etc/nginx/certs/{{item}}"
+  loop:
+    - server.crt 
+    - server.rsa
 - name: Restart service 
   service:
     name: nginx 
     state: restarted
-
-
+  

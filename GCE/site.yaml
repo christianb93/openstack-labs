@@ -39,6 +39,16 @@
       update_cache: yes
       state: latest
 
+#
+# Create credentials
+#
+- name: Create credentials
+  hosts: localhost
+  vars_files:
+    - global_vars.yaml
+  roles:
+    - prepareCredentials
+
 
 # Set up a proxy on the network node to 
 # provide a public API and Horizon endpoint
@@ -58,15 +68,6 @@
 # group_vars in this folder
 ###########################################################################################
 
-#
-# Create credentials
-#
-- name: Create credentials
-  hosts: localhost
-  vars_files:
-    - global_vars.yaml
-  roles:
-    - prepareCredentials
 
 # Make sure that all hosts are up before proceeding
 - name: Check connectivity

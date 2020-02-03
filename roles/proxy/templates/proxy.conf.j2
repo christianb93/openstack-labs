@@ -1,19 +1,23 @@
 {% for port in os_known_ports %}
 server {
-  listen {{port}};
+  listen {{port}} ssl;
+  ssl_certificate         /etc/nginx/certs/server.crt;
+  ssl_certificate_key     /etc/nginx/certs/server.rsa;  
   location / {
-    proxy_bind        {{mgmt_ip}};
-    proxy_pass        http://controller:{{port}};
-    sub_filter        'http://controller:' 'http://{{proxy_public_ip}}:';
-    sub_filter_once   off;
-    sub_filter_types  "application/json";
+    proxy_bind              {{mgmt_ip}};
+    proxy_pass              http://controller:{{port}};
+    sub_filter              'http://controller:' 'https://{{proxy_public_ip}}:';
+    sub_filter_once         off;
+    sub_filter_types        "application/json";
   }
 }
 {% endfor %}
 
 # This is the virtual server for Horizon
 server {
-  listen 443;
+  listen 443 ssl;
+  ssl_certificate         /etc/nginx/certs/server.crt;
+  ssl_certificate_key     /etc/nginx/certs/server.rsa;  
   location /horizon/ {
     proxy_bind                {{mgmt_ip}};
     proxy_pass                http://controller/horizon/;

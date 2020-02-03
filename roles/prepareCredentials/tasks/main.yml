@@ -15,6 +15,7 @@
     - octavia_ca 
     - client_cert
     - keys
+    - nginx
 - name: Check if credentials.yaml exists
   stat:
     path: "{{credentials_dir}}/credentials.yaml"
@@ -114,3 +115,58 @@
     size: 2048
     type: rsa
     state: present
+
+# 
+# Now we create credentials that we might use for a proxy behind which we put our API
+# and the horizon dashboard
+#
+- name: Create key pair for the root CA
+  openssl_privatekey:
+    path: "{{credentials_dir}}/nginx/ca.rsa"
+    size: 2048
+- name: Create certificate signing request
+  openssl_csr:
+    common_name: "Root CA"
+    country_name: "DE"
+    locality_name: "Big city"
+    organization_name: "openstack"
+    key_usage:
+        - digitalSignature
+        - keyCertSign 
+        - cRLSign
+    key_usage_critical: yes
+    basic_constraints: 
+        - CA:TRUE
+    basic_constraints_critical: yes
+    use_common_name_for_san: false
+    path: "{{credentials_dir}}/nginx/ca.csr"
+    privatekey_path: "{{credentials_dir}}/nginx/ca.rsa"
+- name: Create self-signed certificate
+  openssl_certificate:
+    csr_path: "{{credentials_dir}}/nginx/ca.csr"
+    path: "{{credentials_dir}}/nginx/ca.crt"
+    provider: selfsigned
+    privatekey_path: "{{credentials_dir}}/nginx/ca.rsa"    
+
+
+- name: Create key pair for the end-entity
+  openssl_privatekey:
+    path: "{{credentials_dir}}/nginx/server.rsa"
+    size: 2048
+- name: Create certificate signing request
+  openssl_csr:
+    common_name: "NGINX"
+    country_name: "DE"
+    organization_name: "openstack"
+    subject_alt_name: 
+        - IP:{{proxy_public_ip}}
+    path: "{{credentials_dir}}/nginx/server.csr"
+    privatekey_path: "{{credentials_dir}}/nginx/server.rsa"
+- name: Create certificate for server
+  openssl_certificate:
+    csr_path: "{{credentials_dir}}/nginx/server.csr"
+    path: "{{credentials_dir}}/nginx/server.crt"
+    provider: ownca
+    ownca_path: "{{credentials_dir}}/nginx/ca.crt"
+    ownca_privatekey_path: "{{credentials_dir}}/nginx/ca.rsa"    
+ 
