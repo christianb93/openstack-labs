@@ -65,4 +65,6 @@ lb_network_allocation_end: "172.20.0.100"
 # Hand out the public IP of the network node as endpoint for
 # VNC requests
 vnc_ip: "{{hostvars.network.ansible_ssh_host}}"
-vnc_proto: "http"
+vnc_proto: "https"
+# The adress on which our proxy used to proect the API will be listening
+proxy_public_ip: "{{hostvars.network.ansible_ssh_host}}"

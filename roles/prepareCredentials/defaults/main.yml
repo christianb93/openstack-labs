@@ -3,4 +3,4 @@
 # We will create certificates for an NGINX server that might or might
 # not be deployed to protect our API. This is the IP of this server
 #
-proxy_public_ip: "{{hostvars.network.ansible_ssh_host}}"
+proxy_public_ip: "0.0.0.0"

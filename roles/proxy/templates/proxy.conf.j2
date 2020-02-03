@@ -31,7 +31,9 @@ server {
 
 # The entry for the VNC proxy
 server {
-  listen 6080;
+  listen 6080 ssl;
+  ssl_certificate         /etc/nginx/certs/server.crt;
+  ssl_certificate_key     /etc/nginx/certs/server.rsa;  
   location / {
     proxy_bind                  {{mgmt_ip}};
     proxy_pass                  http://controller:6080;
@@ -39,7 +41,7 @@ server {
     proxy_http_version          1.1;
     proxy_set_header            Upgrade $http_upgrade;
     proxy_set_header            Connection "upgrade";
-    proxy_set_header            Host $host;
-    proxy_set_header            Origin http://$host;
+    proxy_set_header            Host {{mgmt_ip}};
+    proxy_set_header            Origin https://{{mgmt_ip}};
   }
 }

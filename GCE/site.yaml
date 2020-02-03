@@ -55,8 +55,9 @@
 - name: Set up proxy on network node
   hosts: network_nodes
   become: yes
+  vars_files:
+    - global_vars.yaml
   vars:
-    proxy_public_ip: "{{ansible_ssh_host}}"
     os_known_ports: ['5000', '8774', '8776', '8778', '9696', '9292', '9876']
   roles: 
   - proxy
