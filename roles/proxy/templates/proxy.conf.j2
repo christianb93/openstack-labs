@@ -1,0 +1,41 @@
+{% for port in os_known_ports %}
+server {
+  listen {{port}};
+  location / {
+    proxy_bind        {{mgmt_ip}};
+    proxy_pass        http://controller:{{port}};
+    sub_filter        'http://controller:' 'http://{{proxy_public_ip}}:';
+    sub_filter_once   off;
+    sub_filter_types  "application/json";
+  }
+}
+{% endfor %}
+
+# This is the virtual server for Horizon
+server {
+  listen 443;
+  location /horizon/ {
+    proxy_bind                {{mgmt_ip}};
+    proxy_pass                http://controller/horizon/;
+    proxy_redirect            default;
+    proxy_request_buffering   off;
+    proxy_set_header          Upgrade $http_upgrade;
+    proxy_set_header          Connection "upgrade";    
+  }
+}
+
+
+# The entry for the VNC proxy
+server {
+  listen 6080;
+  location / {
+    proxy_bind                  {{mgmt_ip}};
+    proxy_pass                  http://controller:6080;
+    proxy_request_buffering     off;
+    proxy_http_version          1.1;
+    proxy_set_header            Upgrade $http_upgrade;
+    proxy_set_header            Connection "upgrade";
+    proxy_set_header            Host $host;
+    proxy_set_header            Origin http://$host;
+  }
+}

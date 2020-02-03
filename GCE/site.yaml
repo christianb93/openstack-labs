@@ -39,6 +39,18 @@
       update_cache: yes
       state: latest
 
+
+# Set up a proxy on the network node to 
+# provide a public API and Horizon endpoint
+- name: Set up proxy on network node
+  hosts: network_nodes
+  become: yes
+  vars:
+    proxy_public_ip: "{{ansible_ssh_host}}"
+    os_known_ports: ['5000', '8774', '8776', '8778', '9696', '9292', '9876']
+  roles: 
+  - proxy
+
 ###########################################################################################
 # Now we simply include the actual Lab. Note that we really have to 
 # put the contents of the playbook here, as using import_playbook or
@@ -141,6 +153,9 @@
     internal_interface: "{{phys_interface}}"
     internal_ip_address: "172.16.0.1/24"
     internal_interface_mtu: 1450
+    # We open a few additional ports that we need to connect to the API, including
+    # port 6080 for the VNC proxy
+    os_known_ports: ['5000', '8774', '8776', '8778', '9696', '9292', '9876','443', '6080']
   roles:
     - router
 

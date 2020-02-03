@@ -1,0 +1,20 @@
+---
+- name: Install NGINX 
+  apt:
+    force_apt_get: yes
+    update_cache: yes
+    name: nginx 
+    state: latest 
+- name: Create configuration file 
+  template:
+    src: proxy.conf.j2 
+    dest: /etc/nginx/conf.d/proxy.conf 
+    owner: root 
+    group: root
+    mode: 0644 
+- name: Restart service 
+  service:
+    name: nginx 
+    state: restarted
+
+

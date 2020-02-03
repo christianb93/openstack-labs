@@ -37,8 +37,6 @@ ovs_tunnel_types: "vxlan"
 # Public interface on the network node to which our iptables configuration will route
 # traffic
 router_public_interface: "ens4"
-# Use the public IP address of the controller node for the VNC proxy URL
-vnc_ip: "{{hostvars.controller.ansible_ssh_host}}"
 # Global MTU on GCE is only 1460 due to GRE encapsulation
 global_mtu: 1460
 # As we realize the network that Neutron sees as physical network as a VXLAN network, we need
@@ -64,3 +62,6 @@ lb_network_cidr: "172.20.0.0/24"
 lb_network_gateway_ip: "172.20.0.1"
 lb_network_allocation_start: "172.20.0.2"
 lb_network_allocation_end: "172.20.0.100"
+# Hand out the public IP of the network node as endpoint for
+# VNC requests
+vnc_ip: "{{hostvars.network.ansible_ssh_host}}"

@@ -96,7 +96,7 @@ resource "google_compute_subnetwork" "public-subnetwork" {
 }
 
 # Add firewall rules to allow incoming ICMP and SSH traffic as well as port 80 (for Horizon)
-# and 6080 (for the VNC console)
+# and 6080 (for the VNC console) and the API ports
 resource "google_compute_firewall" "public-firewall" {
   name    = "public-firewall"
   network = google_compute_network.public-vpc.self_link
@@ -107,7 +107,7 @@ resource "google_compute_firewall" "public-firewall" {
 
   allow {
     protocol      = "tcp"
-    ports         = ["22", "80", "6080"]
+    ports         = ["5000", "8774", "8776", "8778", "9696", "9292", "9876", "22", "443", "6080"]
   }
 
   # If you loose connectivity to your instance and want to use the browser-based
