@@ -5,7 +5,7 @@ This role install the Octavia control plane (controller worker, health manager, 
 
 ## Certificate setup
 
-Certificates for Octavia are a bit tricky. The controller and the agent on each amphora communicate with each other via a TSL secured REST API. The client certificate and client key used for this communication is static and needs to be created by the administrator during the installation. The server certificates, however, are created automatically by Octavia when an amphora is brought up and mapped into the amphora via a config drive. To be able to do this, Octavia has a built-in certificate generator that acts as a cA. 
+Certificates for Octavia are a bit tricky. The controller and the agent on each amphora communicate with each other via a TSL secured REST API. The client certificate and client key used for this communication is static and needs to be created by the administrator during the installation. The server certificates, however, are created automatically by Octavia when an amphora is brought up and mapped into the amphora via a config drive. To be able to do this, Octavia has a built-in certificate generator that acts as a CA. To make all this work, we need to create the following certificates:
 
 * a first CA certificate (octavia_ca). This certificate will be used by the certificate generator and will therefore be the CA certificate with which all server certificates are signed and will be used as a client CA certificate by the Octavia control plane when building a connection to the amphora agent
 * the private key for this certificate
