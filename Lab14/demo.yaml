@@ -59,7 +59,19 @@
         name: demo
         password: "{{OS_DEMO_PASSWORD}}"
         state: present
-    - name: Assign admin role to demo user (needed for octavia, unless we use the load balancer admin role)
+    - name: Create load-balancer_admin role 
+      os_keystone_role: 
+        auth:
+          auth_url: http://controller:5000/v3
+          username: admin
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "admin"
+          password: "{{OS_ADMIN_PASSWORD}}"
+        auth_type: password
+        name: load-balancer_admin
+        state: present
+    - name: Assign member role to demo user 
       os_user_role:
         auth:
           auth_url: http://controller:5000/v3
@@ -71,7 +83,21 @@
         auth_type: password
         project: demo
         user: demo
-        role: admin
+        role: member
+        state: present
+    - name: Assign load-balancer_admin role to demo user 
+      os_user_role:
+        auth:
+          auth_url: http://controller:5000/v3
+          username: admin
+          os_user_domain_name: "default"
+          os_project_domain_name: "default"
+          os_project_name: "admin"
+          password: "{{OS_ADMIN_PASSWORD}}"
+        auth_type: password
+        project: demo
+        user: demo
+        role: load-balancer_admin
         state: present
     - name: Import key pair as demo user
       os_keypair:
