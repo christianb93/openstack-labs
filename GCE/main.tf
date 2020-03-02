@@ -5,13 +5,12 @@
 # The location where we search for the key for the service account
 variable "gcp_service_account_key" {
   type = string
-  default = "~/.gcp_service_account.json"
+  default = "~/.keys/gcp_service_account.json"
 }
 
-# The ID of the project that we use and in which all our resources live
-variable "project_id" {
-  type = string
-  default = "openstack-project-id"
+# Get the ID of the project that we use from our service account key 
+locals {
+  key_data = jsondecode(file("${var.gcp_service_account_key}"))
 }
 
 # The region in which we bring up our resources
@@ -26,14 +25,14 @@ variable "zone" {
   default = "europe-west3-c"
 }
 
-# The file in which the public key for the vagrant user is stored
-variable "vagrant_public_ssh_key_file" {
+# The file in which the public key for the stack user is stored
+variable "stack_public_ssh_key_file" {
   type = string
   default = "~/.ssh/gcp-default-key.pub"
 }
 
-# The file in which the private key for the vagrant user is stored
-variable "vagrant_private_ssh_key_file" {
+# The file in which the private key for the stack user is stored
+variable "stack_private_ssh_key_file" {
   type = string
   default = "~/.ssh/gcp-default-key"
 }
@@ -43,7 +42,7 @@ variable "vagrant_private_ssh_key_file" {
 # specify location of credentials for the service account that we use
 provider "google" {
   credentials = "${file(var.gcp_service_account_key)}"
-  project     = var.project_id
+  project     = local.key_data.project_id
   region = var.region
   zone = var.zone
 }
@@ -229,9 +228,9 @@ resource "google_compute_instance" "controller" {
       image = google_compute_image.ubuntu_bionic_nested_virtualization.self_link
     }
   }
-  # We add a user vagrant with an SSH key
+  # We add a user stack with an SSH key
   metadata = {
-    ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
+    ssh-keys = "stack:${file(var.stack_public_ssh_key_file)}"
   }
 
   metadata_startup_script = "sudo apt-get -y remove sshguard"
@@ -264,9 +263,9 @@ resource "google_compute_instance" "network" {
       image = google_compute_image.ubuntu_bionic_nested_virtualization.self_link
     }
   }
-  # We add a user vagrant with an SSH key
+  # We add a user stack with an SSH key
   metadata = {
-    ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
+    ssh-keys = "stack:${file(var.stack_public_ssh_key_file)}"
   }
 
   metadata_startup_script = "sudo apt-get -y remove sshguard"
@@ -306,9 +305,9 @@ resource "google_compute_instance" "compute" {
       image = google_compute_image.ubuntu_bionic_nested_virtualization.self_link
     }
   }
-  # We add a user vagrant with an SSH key
+  # We add a user stack with an SSH key
   metadata = {
-    ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
+    ssh-keys = "stack:${file(var.stack_public_ssh_key_file)}"
   }
 
   network_interface {
@@ -348,9 +347,9 @@ resource "google_compute_instance" "storage" {
     device_name   = "lvm-volume"
   }
 
-  # We add a user vagrant with an SSH key
+  # We add a user stack with an SSH key
   metadata = {
-    ssh-keys = "vagrant:${file(var.vagrant_public_ssh_key_file)}"
+    ssh-keys = "stack:${file(var.stack_public_ssh_key_file)}"
   }
 
   network_interface {
@@ -370,8 +369,8 @@ output "inventory" {
         "ip"               : "${google_compute_instance.controller.network_interface.0.access_config.0.nat_ip }",
         "mgmt_ip"          : "${google_compute_instance.controller.network_interface.1.network_ip}",
         "underlay_ip"      : "",
-        "ansible_ssh_user" : "vagrant",
-        "private_key_file" : "${var.vagrant_private_ssh_key_file}",
+        "ansible_ssh_user" : "stack",
+        "private_key_file" : "${var.stack_private_ssh_key_file}",
         "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" 
       } ],
       [ {
@@ -380,8 +379,8 @@ output "inventory" {
         "ip"               : "${google_compute_instance.network.network_interface.0.access_config.0.nat_ip }",
         "mgmt_ip"          : "${google_compute_instance.network.network_interface.1.network_ip}",
         "underlay_ip"      : "${google_compute_instance.network.network_interface.2.network_ip}",
-        "ansible_ssh_user" : "vagrant",
-        "private_key_file" : "${var.vagrant_private_ssh_key_file}",
+        "ansible_ssh_user" : "stack",
+        "private_key_file" : "${var.stack_private_ssh_key_file}",
         "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" 
       } ],
       [ {
@@ -390,10 +389,10 @@ output "inventory" {
         "ip"               : "${google_compute_instance.storage.network_interface.0.network_ip }",
         "mgmt_ip"          : "${google_compute_instance.storage.network_interface.0.network_ip}",
         "underlay_ip"      : "",
-        "ansible_ssh_user" : "vagrant",
-        "private_key_file" : "${var.vagrant_private_ssh_key_file}",
+        "ansible_ssh_user" : "stack",
+        "private_key_file" : "${var.stack_private_ssh_key_file}",
         "extra_ssh_config_items"  :  "ProxyJump network",
-        "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o \"ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.vagrant_private_ssh_key_file} -W %h:%p vagrant@${google_compute_instance.network.network_interface.0.access_config.0.nat_ip}\"" 
+        "ssh_args"         : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o \"ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.stack_private_ssh_key_file} -W %h:%p stack@${google_compute_instance.network.network_interface.0.access_config.0.nat_ip}\"" 
       } ],
       [ for s in google_compute_instance.compute[*] : {
         # Note that we use the management IP as SSH target IP as we use the network node as the jump host
@@ -402,10 +401,10 @@ output "inventory" {
         "ip"                      : "${s.network_interface.0.network_ip}",
         "mgmt_ip"                 : "${s.network_interface.0.network_ip}",
         "underlay_ip"             : "${s.network_interface.1.network_ip}",
-        "ansible_ssh_user"        : "vagrant",
-        "private_key_file"        : "${var.vagrant_private_ssh_key_file}",
+        "ansible_ssh_user"        : "stack",
+        "private_key_file"        : "${var.stack_private_ssh_key_file}",
         "extra_ssh_config_items"  :  "ProxyJump network",
-        "ssh_args"                : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o \"ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.vagrant_private_ssh_key_file} -W %h:%p vagrant@${google_compute_instance.network.network_interface.0.access_config.0.nat_ip}\"" 
+        "ssh_args"                : "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o \"ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.stack_private_ssh_key_file} -W %h:%p stack@${google_compute_instance.network.network_interface.0.access_config.0.nat_ip}\"" 
       } ]
    )
 }
